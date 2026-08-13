@@ -1,3 +1,9 @@
+# Solar Radiation Prediction using Saudi Arabia Dataset
+
+> **Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling  
+> **Original Team Repository:** [nishnarudkar/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset](https://github.com/nishnarudkar/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset)
+
+---
 
 #  Solar Radiation Prediction using Saudi Arabia Dataset
 
