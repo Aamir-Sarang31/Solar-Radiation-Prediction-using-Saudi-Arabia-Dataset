@@ -1,573 +1,308 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Radiation Prediction & Analytics | Saudi Arabia</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2222%22 font-size=%2220%22>☀️</text></svg>">
+    <title>Saudi Arabia Solar Radiation Prediction</title>
+    <link rel="icon" href="data:,">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5 & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Leaflet & Select2 -->
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
     <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+    <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
-    <!-- Custom Modern Design System -->
+    <!-- Clean Stylesheet -->
     <link rel="stylesheet" href="/static/style.css">
     
-    <!-- Scripts (Plotly, Leaflet, jQuery, Bootstrap) -->
+    <!-- Scripts -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 
 <body>
-    <!-- Top Navigation Bar -->
-    <header class="navbar-custom">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <div class="brand-title">
-                <i class="fa-solid fa-sun-plant-wilt fa-spin" style="--fa-animation-duration: 25s;"></i>
-                <span>HelioForecast <span style="font-weight:400; font-size: 0.95rem; opacity: 0.85;">| Saudi Solar GHI</span></span>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="d-none d-md-inline-flex align-items-center gap-2" style="font-size: 0.82rem; color: var(--text-secondary);">
-                    <span class="badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); border: 1px solid var(--accent-emerald);">
-                        <i class="fa-solid fa-circle-check me-1"></i>33 Tests Passing
-                    </span>
-                    <span class="badge" style="background: rgba(245,158,11,0.2); color: var(--accent-solar); border: 1px solid var(--accent-solar);">
-                        <i class="fa-solid fa-brain me-1"></i>FT-Transformer R²: 0.9896
-                    </span>
-                </span>
-                <button id="themeToggle" class="btn btn-ghost py-1 px-2" title="Toggle Light/Dark Theme">
-                    <i class="fa-solid fa-moon" id="themeIcon"></i>
-                </button>
-                <a href="https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset" target="_blank" class="btn btn-ghost py-1 px-3">
-                    <i class="fa-brands fa-github me-1"></i>GitHub
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <main class="container-fluid px-lg-4 py-3">
-        <!-- Hero KPI Statistics Banner -->
-        <section class="kpi-container" id="kpiBanner">
-            <div class="kpi-card">
-                <div class="kpi-icon emerald"><i class="fa-solid fa-tower-broadcast"></i></div>
-                <div>
-                    <div class="kpi-val" id="kpiStations">43</div>
-                    <div class="kpi-lbl">Weather Stations</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon solar"><i class="fa-solid fa-database"></i></div>
-                <div>
-                    <div class="kpi-val" id="kpiRecords">1,649</div>
-                    <div class="kpi-lbl">Monthly Observations</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon indigo"><i class="fa-solid fa-microchip"></i></div>
-                <div>
-                    <div class="kpi-val">11 Models</div>
-                    <div class="kpi-lbl">Controlled Benchmarks</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon cyan"><i class="fa-solid fa-award"></i></div>
-                <div>
-                    <div class="kpi-val">126.21 Wh/m²</div>
-                    <div class="kpi-lbl">Top 10-Fold CV RMSE</div>
-                </div>
-            </div>
-        </section>
+    <div class="container-fluid px-lg-5">
+        <h1 class="main-header">Saudi Arabia Solar Radiation Prediction</h1>
+        <p class="sub-header">Prepared by 
+            <a href="https://github.com/nishnarudkar" target="_blank">Nishant Narudkar</a>, 
+            <a href="https://github.com/Vatsal211005" target="_blank">Vatsal Parmar</a>, 
+            <a href="https://github.com/Metzo64" target="_blank">Maitreya Pawar</a>, 
+            <a href="https://github.com/Aamir-Sarang31" target="_blank">Aamir Sarang</a>
+        </p>
 
         <!-- Navigation Tabs -->
-        <nav class="nav nav-pills-custom mb-3" id="mainTabNav" role="tablist">
-            <button class="nav-link active" id="tab-map-btn" data-bs-toggle="pill" data-bs-target="#tab-map" type="button" role="tab">
-                <i class="fa-solid fa-map-location-dot"></i> Map View
-            </button>
-            <button class="nav-link" id="tab-compare-btn" data-bs-toggle="pill" data-bs-target="#tab-compare" type="button" role="tab">
-                <i class="fa-solid fa-chart-line"></i> Station Comparison
-            </button>
-            <button class="nav-link" id="tab-predict-btn" data-bs-toggle="pill" data-bs-target="#tab-predict" type="button" role="tab">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> GHI Prediction Studio
-            </button>
-            <button class="nav-link" id="tab-leaderboard-btn" data-bs-toggle="pill" data-bs-target="#tab-leaderboard" type="button" role="tab">
-                <i class="fa-solid fa-trophy"></i> Model Leaderboard
-            </button>
-            <button class="nav-link" id="tab-eda-btn" data-bs-toggle="pill" data-bs-target="#tab-eda" type="button" role="tab">
-                <i class="fa-solid fa-chart-pie"></i> Data & Research Insights
-            </button>
-        </nav>
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapView" type="button" role="tab">Map View</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="compare-tab" data-bs-toggle="tab" data-bs-target="#stationComparison" type="button" role="tab">Station Comparison</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="predict-tab" data-bs-toggle="tab" data-bs-target="#prediction" type="button" role="tab">Prediction</button>
+            </li>
+        </ul>
 
         <div class="tab-content" id="mainTabContent">
             
             <!-- TAB 1: Map View -->
-            <div class="tab-pane fade show active" id="tab-map" role="tabpanel">
-                <div class="row g-3">
+            <div class="tab-pane fade show active" id="mapView" role="tabpanel">
+                <div class="row g-4">
                     <div class="col-lg-8">
-                        <div class="glass-panel">
-                            <div class="panel-header">
-                                <span class="panel-title"><i class="fa-solid fa-globe text-emerald"></i> Saudi Arabia Monitoring Stations</span>
-                                <div class="map-controls">
-                                    <button id="toggleHeatmap" class="btn btn-ghost py-1 px-3" style="font-size: 0.85rem;">
-                                        <i class="fa-solid fa-fire me-1"></i>Toggle Gradient Layer
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="map"></div>
-                            <div id="mapStatus" class="text-muted mt-2" style="font-size: 0.85rem;"></div>
-                        </div>
+                        <button id="toggleHeatmap" class="toggle-btn">Toggle Gradient View</button>
+                        <div id="map"></div>
+                        <div id="mapStatus" class="map-status"></div>
                     </div>
-                    
-                    <div class="col-lg-4">
-                        <div class="glass-panel">
-                            <div class="panel-header">
-                                <span class="panel-title"><i class="fa-solid fa-circle-info text-cyan"></i> Station Inspector</span>
-                            </div>
-                            <div class="mb-3">
-                                <label class="custom-input-label" for="stationSelect">Select Target Station:</label>
-                                <select id="stationSelect" class="form-select custom-input"></select>
-                            </div>
-                            <div id="stationDetails">
-                                <div class="text-muted text-center py-4">Loading station data...</div>
-                            </div>
+                    <div class="col-lg-4 ps-lg-4">
+                        <div class="station-details-title">Station Details</div>
+                        <div class="mb-3">
+                            <label class="form-label-custom" for="stationSelect">Select Station:</label>
+                            <select id="stationSelect" class="form-select"></select>
+                        </div>
+                        <div id="stationDetails" class="mt-3">
+                            <div class="station-meta-text"><strong>Station:</strong> <span id="metaStationName">Loading...</span></div>
+                            <div class="station-meta-text"><strong>Latitude:</strong> <span id="metaLat">--</span></div>
+                            <div class="station-meta-text"><strong>Longitude:</strong> <span id="metaLong">--</span></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Monthly Trends Panel -->
-                <div class="glass-panel mt-3">
-                    <div class="panel-header">
-                        <span class="panel-title"><i class="fa-solid fa-chart-area text-solar"></i> Monthly Resource Profiles</span>
+                <!-- Monthly Resource Data Section -->
+                <div class="row mt-4 pt-2">
+                    <div class="col-12">
+                        <h4 style="font-size: 1.25rem; font-weight: 600; color: #333; margin-bottom: 1rem;">Monthly Resource Data</h4>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom" for="parameterSelect">Select Parameters:</label>
+                                <select id="parameterSelect" class="form-control" multiple></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom" for="yearSelect">Select Year:</label>
+                                <select id="yearSelect" class="form-select">
+                                    <option value="">All Years</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2020">2020</option>
+                                    <option value="2021">2021</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="monthlyChart" style="height: 400px; width: 100%;"></div>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="custom-input-label" for="parameterSelect">Select Meteorological Parameters:</label>
-                            <select id="parameterSelect" class="form-control" multiple></select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="custom-input-label" for="chartType">Chart Visualization Type:</label>
-                            <select id="chartType" class="form-select custom-input">
-                                <option value="line">Line Chart</option>
-                                <option value="bar">Grouped Bar</option>
-                                <option value="scatter">Scatter with Trendline</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="custom-input-label" for="yearSelect">Filter Year (Optional):</label>
-                            <select id="yearSelect" class="form-select custom-input">
-                                <option value="">All Available Years (2017–2021)</option>
-                                <option value="2017">2017</option>
-                                <option value="2018">2018</option>
-                                <option value="2019">2019</option>
-                                <option value="2020">2020</option>
-                                <option value="2021">2021</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="monthlyChart" style="height: 400px;"></div>
                 </div>
             </div>
 
             <!-- TAB 2: Station Comparison -->
-            <div class="tab-pane fade" id="tab-compare" role="tabpanel">
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <span class="panel-title"><i class="fa-solid fa-code-compare text-indigo"></i> Multi-Station Comparative Analytics</span>
+            <div class="tab-pane fade" id="stationComparison" role="tabpanel">
+                <h3 style="font-size: 1.4rem; font-weight: 600; color: #333; margin-bottom: 1.25rem;">Station Comparison</h3>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label-custom" for="compareStations">Select Stations:</label>
+                        <select id="compareStations" class="form-control" multiple></select>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-5">
-                            <label class="custom-input-label" for="compareStations">Compare Stations (Select 2 or more):</label>
-                            <select id="compareStations" class="form-control" multiple></select>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="custom-input-label" for="compareParams">Compare Metrics & Parameters:</label>
-                            <select id="compareParams" class="form-control" multiple></select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button id="runComparison" class="btn btn-emerald w-100">
-                                <i class="fa-solid fa-play me-1"></i>Compare
-                            </button>
-                        </div>
+                    <div class="col-md-4">
+                        <label class="form-label-custom" for="compareParams">Select Parameters:</label>
+                        <select id="compareParams" class="form-control" multiple></select>
                     </div>
-
-                    <div id="comparisonChart" style="height: 450px;"></div>
-                    
-                    <div class="mt-4">
-                        <h6 class="panel-title mb-3" style="font-size: 1rem;"><i class="fa-solid fa-table-list text-cyan"></i> Statistical Metrics Comparison</h6>
-                        <div class="table-responsive">
-                            <table class="custom-table" id="comparisonTable">
-                                <thead>
-                                    <tr>
-                                        <th>Metric / Parameter</th>
-                                        <th>Statistic</th>
-                                        <th>Station Values</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td colspan="3" class="text-center text-muted">Select stations and click 'Compare' to view summary stats.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label-custom" for="compareYear">Select Year:</label>
+                        <select id="compareYear" class="form-select">
+                            <option value="">All Years</option>
+                            <option value="2017">2017</option>
+                            <option value="2018">2018</option>
+                            <option value="2019">2019</option>
+                            <option value="2020">2020</option>
+                            <option value="2021">2021</option>
+                        </select>
                     </div>
                 </div>
-            </div>
 
-            <!-- TAB 3: GHI Prediction Studio -->
-            <div class="tab-pane fade" id="tab-predict" role="tabpanel">
-                <div class="row g-3">
-                    <div class="col-lg-8">
-                        <div class="glass-panel">
-                            <div class="panel-header">
-                                <div>
-                                    <span class="panel-title"><i class="fa-solid fa-wand-magic-sparkles text-solar"></i> Real-time GHI Solar Prediction</span>
-                                    <p class="text-muted mb-0" style="font-size: 0.82rem;">Select model architecture and populate meteorological parameters</p>
-                                </div>
-                                <div style="min-width: 230px;">
-                                    <select id="predictModelType" class="form-select custom-input">
-                                        <option value="transformer" selected>🏆 FT-Transformer (Best)</option>
-                                        <option value="ann">Artificial Neural Network (ANN)</option>
-                                        <option value="lstm">Solar LSTM (Recurrent)</option>
-                                        <option value="cnn1d">Solar 1D CNN (Conv)</option>
-                                        <option value="linear_regression">Linear Regression Baseline</option>
-                                    </select>
-                                </div>
-                            </div>
+                <div id="comparisonChart" style="height: 420px; width: 100%; margin-top: 15px;"></div>
 
-                            <!-- 1-Click City Presets -->
-                            <div>
-                                <label class="custom-input-label mb-2"><i class="fa-solid fa-city text-emerald me-1"></i> 1-Click Verified City Profiles:</label>
-                                <div class="presets-group">
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Riyadh')"><i class="fa-solid fa-building"></i> Riyadh (Central)</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Jeddah')"><i class="fa-solid fa-water"></i> Jeddah (Red Sea)</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Makkah')"><i class="fa-solid fa-mosque"></i> Makkah (Western)</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Dhahran')"><i class="fa-solid fa-oil-well"></i> Dhahran / Dammam</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Tabuk')"><i class="fa-solid fa-mountain-sun"></i> Tabuk (High DNI)</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Al Ahsa')"><i class="fa-solid fa-tree"></i> Al Ahsa Oasis</button>
-                                    <button type="button" class="preset-chip" onclick="applyPreset('Madinah')"><i class="fa-solid fa-sun"></i> Madinah</button>
-                                    <button type="button" class="btn btn-ghost py-0 px-2" style="font-size: 0.78rem;" onclick="resetFormToAverages()"><i class="fa-solid fa-rotate-left me-1"></i>Averages</button>
-                                </div>
-                            </div>
-
-                            <form id="predictionForm" class="mt-2">
-                                <!-- Solar Radiation Components -->
-                                <div class="feature-group-title"><i class="fa-solid fa-sun"></i> Solar Irradiance Direct Components</div>
-                                <div class="row g-2 mb-3">
-                                    <div class="col-md-4">
-                                        <label class="custom-input-label" for="f_dni">Direct Normal Irradiance (DNI)</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_dni" name="DNI (Wh/m2)" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">Wh/m²</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="custom-input-label" for="f_dhi">Diffuse Horizontal Irradiance (DHI)</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_dhi" name="DHI (Wh/m2)" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">Wh/m²</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="custom-input-label" for="f_std_dni">Std Dev DNI</label>
-                                        <input type="number" step="any" class="form-control custom-input" id="f_std_dni" name="Standard Deviation DNI (Wh/m2)" required>
-                                    </div>
-                                </div>
-
-                                <!-- Temperature & Humidity -->
-                                <div class="feature-group-title"><i class="fa-solid fa-temperature-half"></i> Ambient Thermal & Moisture Indices</div>
-                                <div class="row g-2 mb-3">
-                                    <div class="col-md-3">
-                                        <label class="custom-input-label" for="f_temp">Air Temperature</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_temp" name="Air Temperature (C°)" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">°C</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="custom-input-label" for="f_humidity">Relative Humidity</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_humidity" name="Relative Humidity (%)" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">%</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="custom-input-label" for="f_pressure">Barometric Pressure</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_pressure" name="Barometric Pressure (mB (hPa equiv))" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">hPa</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="custom-input-label" for="f_wind">Wind Speed (3m)</label>
-                                        <div class="input-group">
-                                            <input type="number" step="any" class="form-control custom-input" id="f_wind" name="Wind Speed at 3m (m/s)" required>
-                                            <span class="input-group-text" style="background: rgba(15,23,42,0.6); color: var(--text-muted); font-size: 0.75rem;">m/s</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Secondary Atmospheric & Uncertainty Inputs (Collapsible for Clean UX) -->
-                                <div class="accordion mb-3" id="advancedParamsAccordion">
-                                    <div class="accordion-item" style="background: transparent; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdv" style="background: rgba(15,23,42,0.4); color: var(--text-secondary); font-size: 0.85rem;">
-                                                <i class="fa-solid fa-sliders me-2"></i> Additional Wind & Uncertainty Parameters (13 variables)
-                                            </button>
-                                        </h2>
-                                        <div id="collapseAdv" class="accordion-collapse collapse p-3">
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Wind Direction at 3m (°N)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Wind Direction at 3m (°N)" id="f_wind_dir">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Wind Speed std dev (m/s)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Wind Speed at 3m (std dev) (m/s)" id="f_wind_std">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Peak Wind Speed (m/s)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Peak Wind Speed at 3m (m/s)" id="f_peak_wind">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Std Dev DHI (Wh/m²)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Standard Deviation DHI (Wh/m2)" id="f_std_dhi">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Std Dev GHI (Wh/m²)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Standard Deviation GHI (Wh/m2)" id="f_std_ghi">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">DNI Uncertainty (Wh/m²)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="DNI Uncertainty (Wh/m2)" id="f_dni_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">DHI Uncertainty (Wh/m²)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="DHI Uncertainty (Wh/m2)" id="f_dhi_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">GHI Uncertainty (Wh/m²)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="GHI Uncertainty (Wh/m2)" id="f_ghi_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Air Temp Uncertainty (°C)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Air Temperature Uncertainty (C°)" id="f_temp_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Rel Humidity Uncertainty (%)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Relative Humidity Uncertainty (%)" id="f_hum_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Pressure Uncertainty (hPa)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Barometric Pressure Uncertainty (mB (hPa equiv))" id="f_pres_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Wind Speed Uncertainty (m/s)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Wind Speed at 3m Uncertainty (m/s)" id="f_ws_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Peak Wind Uncertainty (m/s)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Peak Wind Speed at 3m Uncertainty (m/s)" id="f_pws_unc">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="custom-input-label">Wind Direction Uncertainty (°N)</label>
-                                                    <input type="number" step="any" class="form-control custom-input" name="Wind Direction at 3m Uncertainty (°N)" id="f_wd_unc">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn btn-emerald w-100 py-2 fs-6">
-                                    <i class="fa-solid fa-bolt me-2"></i>Compute GHI Forecast
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Solar Gauge Result Card -->
-                    <div class="col-lg-4">
-                        <div class="gauge-card">
-                            <span class="panel-title justify-content-center mb-1">
-                                <i class="fa-solid fa-sun text-solar"></i> Predicted Global Irradiance
-                            </span>
-                            <div class="prediction-badge" id="predValue">--</div>
-                            <div class="prediction-unit">Watt-hours per square meter (Wh/m²)</div>
-                            
-                            <div id="tierContainer" class="my-2">
-                                <span class="tier-indicator tier-mid" id="predTier">Awaiting Inputs</span>
-                            </div>
-
-                            <hr style="border-color: var(--border-color); margin: 1.25rem 0;">
-
-                            <!-- Estimated Generation for 1 kWp panel -->
-                            <div class="text-start mb-3">
-                                <span class="custom-input-label" style="font-size: 0.85rem;"><i class="fa-solid fa-solar-panel text-emerald me-1"></i> Solar PV Yield Estimation:</span>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <span style="font-size: 0.85rem; color: var(--text-secondary);">1 kWp Standard PV Output:</span>
-                                    <span class="fw-bold" id="estPvYield" style="color: var(--accent-emerald);">-- kWh / day</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Active Model:</span>
-                                    <span class="badge badge-model-type" id="activeModelTag">FT-Transformer</span>
-                                </div>
-                            </div>
-
-                            <div id="gaugePlot" style="height: 220px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: Model Leaderboard -->
-            <div class="tab-pane fade" id="tab-leaderboard" role="tabpanel">
-                <div class="glass-panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="panel-title"><i class="fa-solid fa-trophy text-solar"></i> Controlled 11-Model Benchmark Leaderboard</span>
-                            <p class="text-muted mb-0" style="font-size: 0.82rem;">10-Fold Cross-Validation on Saudi Arabia Dataset (1,649 records, Seed 42, Target Scaled)</p>
-                        </div>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-ghost py-1 px-3 active" onclick="filterLeaderboard('all')">All (11)</button>
-                            <button type="button" class="btn btn-ghost py-1 px-3" onclick="filterLeaderboard('Deep Learning')">Deep Learning</button>
-                            <button type="button" class="btn btn-ghost py-1 px-3" onclick="filterLeaderboard('Ensemble')">Ensemble</button>
-                            <button type="button" class="btn btn-ghost py-1 px-3" onclick="filterLeaderboard('Classical')">Classical ML</button>
-                        </div>
-                    </div>
-
+                <div class="summary-table-container">
+                    <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem;">Summary Statistics (GHI)</h4>
                     <div class="table-responsive">
-                        <table class="custom-table" id="leaderboardTable">
+                        <table class="summary-table" id="comparisonTable">
                             <thead>
                                 <tr>
-                                    <th>Rank</th>
-                                    <th>Model Architecture</th>
-                                    <th>Category</th>
-                                    <th>MAE (Wh/m²)</th>
-                                    <th>RMSE (Wh/m²)</th>
-                                    <th>R² Score</th>
-                                    <th>Train Time / Fold</th>
-                                    <th>Status</th>
+                                    <th>Station</th>
+                                    <th>GHI Mean</th>
+                                    <th>GHI Min</th>
+                                    <th>GHI Max</th>
+                                    <th>GHI Std</th>
                                 </tr>
                             </thead>
-                            <tbody id="leaderboardBody">
-                                <!-- Populated dynamically by JS -->
+                            <tbody>
+                                <tr><td colspan="5" class="text-center text-muted">Select stations above to display GHI summary statistics.</td></tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="row g-3 mt-4">
-                        <div class="col-lg-6">
-                            <div class="p-3" style="background: rgba(15,23,42,0.4); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                                <h6 class="panel-title mb-2" style="font-size: 0.95rem;"><i class="fa-solid fa-chart-column text-emerald"></i> Error Comparison (RMSE Wh/m²)</h6>
-                                <div id="leaderboardChart" style="height: 320px;"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="p-3" style="background: rgba(15,23,42,0.4); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                                <h6 class="panel-title mb-2" style="font-size: 0.95rem;"><i class="fa-solid fa-lightbulb text-solar"></i> Key Research Takeaways</h6>
-                                <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; padding-left: 1.2rem;" class="mb-0">
-                                    <li><strong>FT-Transformer Champion:</strong> Outperforms all 10 baselines with <strong>R² = 0.9896</strong> and <strong>RMSE = 126.21 Wh/m²</strong> via Feature Tokenizer embeddings and multi-head self-attention.</li>
-                                    <li><strong>Non-Linear Interactions:</strong> Self-attention effectively captures complex multi-variable interactions (e.g. DNI modulation during winter zenith angles).</li>
-                                    <li><strong>Spatial Generalization:</strong> Evaluated under 43-Fold LOSO CV with <strong>R² = 0.9784</strong> across all Saudi weather monitoring stations.</li>
-                                    <li><strong>Automated MLOps:</strong> Optuna Bayesian hyperparameter search coupled with MLflow model registry promotion gates.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- TAB 5: Data & Research Insights -->
-            <div class="tab-pane fade" id="tab-eda" role="tabpanel">
-                <div class="row g-3">
-                    <div class="col-lg-6">
-                        <div class="glass-panel">
-                            <div class="panel-header">
-                                <span class="panel-title"><i class="fa-solid fa-layer-group text-cyan"></i> Solar Irradiance Distribution Regimes</span>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="custom-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Irradiance Tier</th>
-                                            <th>GHI Range (Wh/m²)</th>
-                                            <th>Sample Count</th>
-                                            <th>FT-Transformer RMSE</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><span class="badge" style="background: rgba(244,63,94,0.2); color: var(--accent-rose);">Low GHI</span></td>
-                                            <td>3,000 – 5,000</td>
-                                            <td>471 samples</td>
-                                            <td><strong>140.63 Wh/m²</strong> (MAPE 2.64%)</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge" style="background: rgba(245,158,11,0.2); color: var(--accent-solar);">Mid GHI</span></td>
-                                            <td>5,000 – 7,000</td>
-                                            <td>807 samples</td>
-                                            <td><strong>131.46 Wh/m²</strong> (MAPE 1.64%)</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge" style="background: rgba(16,185,129,0.2); color: var(--accent-emerald);">High GHI</span></td>
-                                            <td>7,000 – 8,400</td>
-                                            <td>371 samples</td>
-                                            <td><strong>135.02 Wh/m²</strong> (MAPE 1.41%)</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="text-muted mt-2" style="font-size: 0.8rem;">
-                                * Over 94.5% of out-of-fold test predictions fall within the stringent ±5% error band.
-                            </div>
+            <!-- TAB 3: Prediction -->
+            <div class="tab-pane fade" id="prediction" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 style="font-size: 1.4rem; font-weight: 600; color: #333; margin-bottom: 0;">GHI Prediction</h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="predictModelType" class="form-label-custom mb-0" style="white-space: nowrap;">Model:</label>
+                        <select id="predictModelType" class="form-select" style="min-width: 220px;">
+                            <option value="transformer" selected>FT-Transformer (Ours - Best)</option>
+                            <option value="ann">Artificial Neural Network (ANN)</option>
+                            <option value="linear_regression">Linear Regression</option>
+                            <option value="lstm">Solar LSTM</option>
+                            <option value="cnn1d">Solar 1D CNN</option>
+                        </select>
+                    </div>
+                </div>
+
+                <form id="predictionForm">
+                    <div class="row g-3">
+                        <!-- Row 1 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Air Temperature (°C):</label>
+                            <input type="number" step="any" class="form-control" name="Air Temperature (C°)" id="f_temp">
+                            <div class="range-text">Range: 8.10 - 38.70 °C</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Air Temp Uncertainty (°C):</label>
+                            <input type="number" step="any" class="form-control" name="Air Temperature Uncertainty (C°)" id="f_temp_unc">
+                            <div class="range-text">Range: 0.50 - 0.60 °C</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Wind Direction (°N):</label>
+                            <input type="number" step="any" class="form-control" name="Wind Direction at 3m (°N)" id="f_wind_dir">
+                            <div class="range-text">Range: 0.00 - 359.00 °N</div>
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Wind Direction Uncertainty (°N):</label>
+                            <input type="number" step="any" class="form-control" name="Wind Direction at 3m Uncertainty (°N)" id="f_wind_dir_unc">
+                            <div class="range-text">Range: 0.00 - 4.80 °N</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Wind Speed at 3m (m/s):</label>
+                            <input type="number" step="any" class="form-control" name="Wind Speed at 3m (m/s)" id="f_wind_spd">
+                            <div class="range-text">Range: 0.00 - 7.80 m/s</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Wind Speed Uncertainty (m/s):</label>
+                            <input type="number" step="any" class="form-control" name="Wind Speed at 3m Uncertainty (m/s)" id="f_wind_spd_unc">
+                            <div class="range-text">Range: 0.00 - 0.10 m/s</div>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Wind Speed Std Dev (m/s):</label>
+                            <input type="number" step="any" class="form-control" name="Wind Speed at 3m (std dev) (m/s)" id="f_wind_std">
+                            <div class="range-text">Range: 0.00 - 4.50 m/s</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">DHI (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="DHI (Wh/m2)" id="f_dhi">
+                            <div class="range-text">Range: 865.80 - 6394.60 Wh/m²</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">DHI Uncertainty (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="DHI Uncertainty (Wh/m2)" id="f_dhi_unc">
+                            <div class="range-text">Range: 37.30 - 1344.60 Wh/m²</div>
+                        </div>
+
+                        <!-- Row 4 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Standard Deviation DHI (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="Standard Deviation DHI (Wh/m2)" id="f_std_dhi">
+                            <div class="range-text">Range: 145.30 - 1648.50 Wh/m²</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">DNI (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="DNI (Wh/m2)" id="f_dni">
+                            <div class="range-text">Range: 0.30 - 9517.00 Wh/m²</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">DNI Uncertainty (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="DNI Uncertainty (Wh/m2)" id="f_dni_unc">
+                            <div class="range-text">Range: 0.20 - 2115.50 Wh/m²</div>
+                        </div>
+
+                        <!-- Row 5 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Standard Deviation DNI (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="Standard Deviation DNI (Wh/m2)" id="f_std_dni">
+                            <div class="range-text">Range: 0.40 - 3282.20 Wh/m²</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">GHI Uncertainty (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="GHI Uncertainty (Wh/m2)" id="f_ghi_unc">
+                            <div class="range-text">Range: 98.40 - 5249.60 Wh/m²</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Standard Deviation GHI (Wh/m²):</label>
+                            <input type="number" step="any" class="form-control" name="Standard Deviation GHI (Wh/m2)" id="f_std_ghi">
+                            <div class="range-text">Range: 117.60 - 1720.70 Wh/m²</div>
+                        </div>
+
+                        <!-- Row 6 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Peak Wind Speed at 3m (m/s):</label>
+                            <input type="number" step="any" class="form-control" name="Peak Wind Speed at 3m (m/s)" id="f_peak_wind">
+                            <div class="range-text">Range: 0.00 - 40.50 m/s</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Peak Wind Speed Uncertainty (m/s):</label>
+                            <input type="number" step="any" class="form-control" name="Peak Wind Speed at 3m Uncertainty (m/s)" id="f_peak_wind_unc">
+                            <div class="range-text">Range: 0.00 - 0.20 m/s</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Relative Humidity (%):</label>
+                            <input type="number" step="any" class="form-control" name="Relative Humidity (%)" id="f_hum">
+                            <div class="range-text">Range: 8.30 - 95.00 %</div>
+                        </div>
+
+                        <!-- Row 7 -->
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Relative Humidity Uncertainty (%):</label>
+                            <input type="number" step="any" class="form-control" name="Relative Humidity Uncertainty (%)" id="f_hum_unc">
+                            <div class="range-text">Range: 2.80 - 3.70 %</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Barometric Pressure (hPa):</label>
+                            <input type="number" step="any" class="form-control" name="Barometric Pressure (mB (hPa equiv))" id="f_pressure">
+                            <div class="range-text">Range: 831.30 - 1019.70 hPa</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom">Barometric Pressure Uncertainty (hPa):</label>
+                            <input type="number" step="any" class="form-control" name="Barometric Pressure Uncertainty (mB (hPa equiv))" id="f_pressure_unc">
+                            <div class="range-text">Range: 4.10 - 6.20 hPa</div>
                         </div>
                     </div>
 
-                    <div class="col-lg-6">
-                        <div class="glass-panel">
-                            <div class="panel-header">
-                                <span class="panel-title"><i class="fa-solid fa-server text-indigo"></i> Dataset Overview & Metadata</span>
-                            </div>
-                            <ul style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.8;" class="mb-0">
-                                <li><strong>Dataset:</strong> King Fahd University of Petroleum & Minerals (KFUPM) Solar Network</li>
-                                <li><strong>Geographic Scope:</strong> 43 Stations across all provinces of Saudi Arabia</li>
-                                <li><strong>Temporal Window:</strong> 2017 – 2021 (Monthly aggregated observations)</li>
-                                <li><strong>Total Records:</strong> 1,649 clean observation rows</li>
-                                <li><strong>Input Dimensionality:</strong> 21 continuous meteorological & irradiance features</li>
-                                <li><strong>Target Variable:</strong> Global Horizontal Irradiance (GHI) in Wh/m²</li>
-                            </ul>
-                        </div>
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="button" id="loadDefaultsBtn" class="btn-defaults">Load Default Values</button>
+                        <button type="submit" class="btn-predict">Predict GHI</button>
                     </div>
+                </form>
+
+                <!-- Prediction Result Box -->
+                <div id="predictionResult" class="prediction-alert mt-4" style="display: none;">
+                    Predicted GHI: <span id="predValueText" style="font-weight: 700;">5906.94</span> Wh/m²
                 </div>
             </div>
 
         </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="text-center py-4 mt-4" style="border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.85rem;">
-        <div class="container">
-            <p class="mb-1">
-                <strong>Solar Radiation Prediction using Saudi Arabia Dataset</strong> — Research Project & Predictive Platform
-            </p>
-            <p class="mb-1" style="color: var(--text-secondary);">
-                Authors: <strong>Aamir Sarang</strong>, <strong>Nishant Narudkar</strong>, <strong>Maitreya Pawar</strong>, <strong>Vatsal Parmar</strong>
-            </p>
-            <p class="mb-0" style="font-size: 0.78rem;">
-                Guided by <strong>Mr. Pramod H. Kachare</strong> and <strong>Mr. Sandeep Sangle</strong> | Open Source under MIT License
-            </p>
-        </div>
-    </footer>
+    </div>
 
     <!-- Frontend Logic -->
     <script src="/static/app.js"></script>
