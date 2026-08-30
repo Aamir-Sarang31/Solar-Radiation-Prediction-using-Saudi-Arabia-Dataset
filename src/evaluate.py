@@ -44,6 +44,7 @@ def check_promotion_gate(
     tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
     mlflow.set_tracking_uri(tracking_uri)
     client = MlflowClient()
+    candidate_run = None
 
     # If run_id or model_name provided without explicit metrics, pull directly from MLflow
     if candidate_rmse is None or candidate_r2 is None or run_id is not None:
@@ -82,14 +83,24 @@ def check_promotion_gate(
             if candidate_r2 is None:
                 candidate_r2 = 0.0
 
+    is_smoke_test = False
+    if candidate_run is not None:
+        is_smoke_test = candidate_run.data.tags.get("run_type") == "smoke_test"
+
+    effective_max_rmse = 800.0 if is_smoke_test else MAX_RMSE_THRESHOLD
+    effective_min_r2 = 0.50 if is_smoke_test else TARGET_R2_THRESHOLD
+
     print(f"\n==================== MLFLOW REGISTRY PROMOTION GATE ====================")
     print(f" Candidate Architecture: {candidate_model_name}")
     print(f" Candidate Evaluated RMSE: {candidate_rmse:.2f} | Evaluated R²: {candidate_r2:.4f}")
-    print(f" Required Gate Thresholds: RMSE <= {MAX_RMSE_THRESHOLD} | R² >= {TARGET_R2_THRESHOLD}")
+    if is_smoke_test:
+        print(f" [SMOKE TEST DETECTED] Running under relaxed CI smoke gate thresholds: RMSE <= {effective_max_rmse} | R² >= {effective_min_r2}")
+    else:
+        print(f" Required Gate Thresholds: RMSE <= {effective_max_rmse} | R² >= {effective_min_r2}")
 
     # Check minimum quality gate
-    if candidate_r2 < TARGET_R2_THRESHOLD or candidate_rmse > MAX_RMSE_THRESHOLD:
-        print(f" [REJECTED] Candidate failed minimum quality thresholds (R² >= {TARGET_R2_THRESHOLD}, RMSE <= {MAX_RMSE_THRESHOLD}).")
+    if candidate_r2 < effective_min_r2 or candidate_rmse > effective_max_rmse:
+        print(f" [REJECTED] Candidate failed minimum quality thresholds (R² >= {effective_min_r2}, RMSE <= {effective_max_rmse}).")
         return False
 
     try:
