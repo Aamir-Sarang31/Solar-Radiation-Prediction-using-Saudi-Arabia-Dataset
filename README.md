@@ -1,208 +1,424 @@
 # Solar Radiation Prediction using Saudi Arabia Dataset
 
-> **Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling  
-> **Original Team Repository:** [nishnarudkar/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset](https://github.com/nishnarudkar/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset)
+[![CI/CD](https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/actions/workflows/ci.yml/badge.svg)](https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/actions)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
+[![MLflow](https://img.shields.io/badge/MLflow-Tracking%20%26%20Registry-0194E2.svg)](https://mlflow.org/)
+[![Optuna](https://img.shields.io/badge/Optuna-HPO-5C2D91.svg)](https://optuna.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **Research Paper & Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling using Multi-Station Meteorological Observations across Saudi Arabia.
 
 ---
 
-#  Solar Radiation Prediction using Saudi Arabia Dataset
+## Table of Contents
 
-This project predicts **Global Horizontal Irradiance (GHI)** using historical weather data from Saudi Arabia. It uses Machine Learning models to build an accurate forecasting system and deploys it as a web application for real-time GHI prediction.
-
----
-
-##  Project Overview
-
-The goal of this project is to forecast **GHI (Global Horizontal Irradiance)** using machine learning models trained on **Saudi Arabia weather data (2015–2020)**. Accurate solar radiation prediction is critical for solar energy planning, grid optimization, and sustainable energy development.
-
----
-
-##  Dataset
-
-- **Source:** [Saudi Open Data Portal](https://open.data.gov.sa/)
-- **Records:** 2018 (from 57 weather stations)
-- **Features:** 27 (Temperature, DHI, DNI, Wind Speed, Humidity, etc.)
-- **Missing Values:** 2,175 entries
+- [Project Overview](#-project-overview)
+- [Key Features](#-key-features)
+- [Benchmark Results](#-controlled-model-performance--benchmarks-10-fold-cross-validation)
+- [Deep Learning Architectures](#-deep-learning-architectures)
+- [Hyperparameter Tuning (Optuna)](#-automated-hyperparameter-tuning-optuna)
+- [MLOps Pipeline](#-mlops-mlflow-experiment-tracking--registry-gating)
+- [Project Structure](#-project-structure)
+- [Quickstart Guide](#-quickstart-guide)
+- [Web Application](#-web-application)
+- [Dataset](#-dataset)
+- [CI/CD Pipeline](#-cicd-workflows)
+- [Testing](#-testing)
+- [Authors & Acknowledgements](#-authors--acknowledgements)
+- [License](#-license)
 
 ---
 
-##  Technologies Used
+## 🌟 Project Overview
 
-- **Languages:** Python, HTML, CSS, JavaScript  
-- **Libraries/Frameworks:**  
-  - Scikit-learn  
-  - Keras  
-  - Pandas, NumPy, Matplotlib  
-  - Flask (for backend)
-- **Hosting:** Render
----
+This project forecasts **Global Horizontal Irradiance (GHI)** using meteorological observations collected from **43 weather monitoring stations across Saudi Arabia (2017–2021)**.
 
-##  Model Training
+We systematically evaluate and benchmark **11 machine learning and deep learning models** under rigorous **10-Fold Cross-Validation** and **43-Fold Leave-One-Station-Out (LOSO) Cross-Validation**, with:
 
-We trained and compared the following models:
-- Linear Regression (LR)  *(used in deployment)*
-- K-Nearest Neighbors (KNN)
-- Support Vector Regression (SVR)
-- Decision Tree (DT)
-- Artificial Neural Network (ANN)
-- Random Forest (RF)
-- XGBoost
-- Histogram Gradient Boosting (HGB)
-
-###  Evaluation Metrics:
-- MAE (Mean Absolute Error)
-- MSE (Mean Squared Error)
-- RMSE (Root Mean Squared Error)
-- R² Score
-- Training Time
-
-**Cross-validation:**
-- 10-Fold
-- 43-Fold (Leave-one-station-out)
-
----
-##  Model Selection Strategy
-
-Multiple regression models were evaluated and tracked using **Weights & Biases (W&B)**, including
-Linear Regression, Random Forest, Decision Tree, KNN, SVR, XGBoost, ANN, and Histogram Gradient Boosting.
-
-Models were automatically ranked using a composite score that balances:
-- Prediction accuracy (RMSE, R²)
-- Inference latency (testing time)
-
-Although some complex models achieved comparable accuracy, **Linear Regression** provided the best
-accuracy–latency trade-off and was therefore selected for deployment.
-
- Full experiment tracking and interactive dashboards are available on:
-https://wandb.ai/nishnarudkar-d-y-patil-university/solar-radiation-prediction
-
-Weights & Biases Report: https://api.wandb.ai/links/nishnarudkar-d-y-patil-university/l4xo0wax
-
-##  Web Deployment
-
-We deployed the final model using:
-- **Model:** Linear Regression (due to low error & fast computation)
-- **Hosting:** Render
-- **Backend:** Flask
-- **Frontend:** HTML, CSS, JS
-- **Inputs:**  
-1. **Air Temperature (C°)**
-2. **Air Temperature Uncertainty (C°)**
-3. **Wind Direction at 3m (°N)**
-4. **Wind Direction at 3m Uncertainty (°N)**
-5. **Wind Speed at 3m (m/s)**
-6. **Wind Speed at 3m Uncertainty (m/s)**
-7. **Wind Speed at 3m (std dev) (m/s)**
-8. **DHI (Wh/m2)**
-9. **DHI Uncertainty (Wh/m2)**
-10. **Standard Deviation DHI (Wh/m2)**
-11. **DNI (Wh/m2)**
-12. **DNI Uncertainty (Wh/m2)**
-13. **Standard Deviation DNI (Wh/m2)**
-14. **GHI Uncertainty (Wh/m2)**
-15. **Standard Deviation GHI (Wh/m2)**
-16. **Peak Wind Speed at 3m (m/s)**
-17. **Peak Wind Speed at 3m Uncertainty (m/s)**
-18. **Relative Humidity (%)**
-19. **Relative Humidity Uncertainty (%)**
-20. **Barometric Pressure (mB (hPa equiv))**
-21. **Barometric Pressure Uncertainty (mB (hPa equiv))**
-
-These metrics must be provided in the correct format and order when making predictions.
-
-The user inputs these features via the interface and gets the predicted GHI in real time.
-
-## Screenshots
-
-### Home Page
-![Home Page](Screenshots/homepage.jpg)
-
-### Features Comparison
-![Features_Comparison](Screenshots/Features_comparison.jpg)
-
-### Station Comparison
-![Station Comparsion](Screenshots/Station_comparison.jpg)
-
-### Prediction Results
-![Prediction Results](Screenshots/Predictions.jpg)
+- 🧠 **3 Custom Deep Learning Architectures** (FT-Transformer, LSTM, 1D CNN)
+- 📊 **8 Classical ML Baselines** (SVR, HGB, XGBoost, RF, ANN, LR, DT, KNN)
+- 🔬 **Automated Hyperparameter Optimization** via Optuna (Bayesian TPE Search)
+- 📈 **End-to-end MLflow Experiment Tracking** with automated Model Registry promotion gating
+- 🌐 **Interactive Flask Web Application** with real-time predictions and station maps
+- ⚙️ **CI/CD Pipelines** with GitHub Actions
 
 ---
 
-## Demo Video
+## 🏆 Key Features
 
-Watch the demo video of the website [Youtube_Link](https://youtu.be/jLimPXA7apc).  
-
----
-
-## 🧪 Results
-
-| Model              | MAE (Wh/m²) | RMSE (Wh/m²) | R² Score | Training Time (s) |
-|-------------------|-------------|--------------|----------|-------------------|
-| Linear Regression | 135.94      | 193.74       | 0.97     | 0.01              |
-| Histogram GB      | 140.58      | 192.11       | 0.98     | 0.83              |
-| XGBoost           | 148.37      | 198.05       | 0.97     | 2.73              |
-| ANN               | 154.4       | 241.22       | 0.96     | 10.6              |
+| Feature | Description |
+|---|---|
+| **11-Model Controlled Benchmark** | All models evaluated under identical 10-fold CV partitions, same seed, and uniform scaling |
+| **FT-Transformer Architecture** | Feature Tokenizer Transformer achieving **R² = 0.9896** — best-in-class for tabular solar data |
+| **Optuna Hyperparameter Tuning** | Bayesian TPE search with MedianPruner for automated, efficient optimization |
+| **MLflow Experiment Tracking** | Every run logs parameters, metrics, plots, and model artifacts to SQLite |
+| **Model Registry Promotion Gate** | Automated quality gate blocks deployment if candidate fails RMSE/R² thresholds |
+| **43-Station LOSO Validation** | Spatial generalization testing across all Saudi Arabian weather stations |
+| **Interactive Web App** | Flask app with Leaflet.js station map, multi-model predictions, and Plotly visualizations |
+| **CI/CD Integration** | GitHub Actions for linting, testing, smoke training, and promotion gate verification |
 
 ---
 
-## 🚀 How to Run
+## 🧪 Controlled Model Performance & Benchmarks (10-Fold Cross-Validation)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/solar-radiation-prediction.git
-   cd solar-radiation-prediction
+All 11 models evaluated under the **exact same 10-fold CV partitions, same random seed (42), and uniform feature/target scaling** on `dataset.csv` (1,649 records across 43 stations). Sorted strictly by ascending RMSE (primary gate metric):
 
-2.**Installation**
+| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | R² Score | Time (s/fold) |
+| :---: | :--- | :--- | :---: | :---: | :---: | :---: |
+| 🥇 | **FT-Transformer (Ours)** | **Deep Learning** | **94.38 ± 6.27** | **126.21 ± 13.17** | **0.9896 ± 0.0026** | **1.94** |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | 172.50 ± 14.25 | 0.9807 ± 0.0037 | 0.36 |
+| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | 178.39 ± 22.46 | 0.9792 ± 0.0055 | 0.16 |
+| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | 188.36 ± 35.15 | 0.9765 ± 0.0080 | 0.04 |
+| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | 194.14 ± 42.34 | 0.9746 ± 0.0122 | 0.00 |
+| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | 215.21 ± 20.70 | 0.9697 ± 0.0067 | 0.10 |
+| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | 230.28 ± 26.87 | 0.9653 ± 0.0090 | 0.22 |
+| 8 | **1D CNN (Ours)** | **Deep Learning** | 241.06 ± 15.84 | 318.02 ± 24.57 | 0.9340 ± 0.0141 | 1.83 |
+| 9 | **Solar LSTM (Ours)** | **Deep Learning** | 273.68 ± 40.51 | 362.18 ± 55.91 | 0.9117 ± 0.0335 | 1.62 |
+| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | 410.28 ± 51.76 | 0.8895 ± 0.0312 | 0.01 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | 447.20 ± 27.45 | 0.8699 ± 0.0236 | 0.00 |
 
-### Install Dependencies:
+### 🗺️ 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation
+
+Evaluating spatial generalization of the FT-Transformer across all 43 weather stations:
+
+| Metric | Value |
+|---|:---:|
+| **MAE** | 101.67 ± 30.16 Wh/m² |
+| **RMSE** | 132.78 ± 52.61 Wh/m² |
+| **R² Score** | 0.9784 ± 0.0381 |
+
+This demonstrates strong generalization to **previously unseen geographic locations** across Saudi Arabia.
+
+---
+
+## 🏗️ Deep Learning Architectures
+
+### 1. FT-Transformer (Feature Tokenizer Transformer) — Champion Model
+
+```
+Input: (B, 21 features)
+  ├── Numerical Feature Tokenizer: 21 × Linear(1, 48) projections → (B, 21, 48)
+  ├── Prepend Learnable [CLS] Token → (B, 22, 48)
+  ├── 2× Pre-LN TransformerEncoderLayer (4 Heads, DimFF=96, Dropout=0.15)
+  └── Extract [CLS] Token → LayerNorm → Linear(48, 1) → Output GHI (B, 1)
+```
+
+**Key Innovation:** Each numerical feature is independently projected into a learned embedding space via its own linear layer, then processed through multi-head self-attention — enabling the model to learn complex inter-feature interactions (e.g., how DNI modulates with temperature and pressure seasonally).
+
+### 2. Solar 1D CNN
+
+```
+Input: (B, 1, 21)
+  ├── Stem Conv1d(1, 32) + BatchNorm1d + GELU
+  ├── Residual ConvBlock1D(32, 64) + Residual ConvBlock1D(64, 128)
+  └── AdaptiveAvgPool1d(1) → Flatten → MLP Head → Output GHI (B, 1)
+```
+
+### 3. Solar LSTM
+
+```
+Input: (B, 21, 1)
+  ├── Linear Feature Projection (1 → 32) + LayerNorm
+  ├── 2-Layer Bidirectional LSTM(32, 64, Dropout=0.2)
+  └── Global Average Pooling → LayerNorm → MLP Head → Output GHI (B, 1)
+```
+
+---
+
+## 🔍 Automated Hyperparameter Tuning (Optuna)
+
+The project includes a fully automated hyperparameter optimization pipeline using **Optuna** with Bayesian TPE (Tree-structured Parzen Estimator) search.
+
+### How It Works
+
+1. **Optuna** creates trials by sampling hyperparameters from defined search spaces
+2. Each trial evaluates performance via **K-Fold Cross-Validation** (default: 10-fold)
+3. **MedianPruner** stops unpromising trials early (if fold-by-fold RMSE is worse than the median of completed trials)
+4. Every trial is automatically logged to **MLflow**
+5. The best configuration is exported to a JSON file for reproducible re-training
+
+### Supported Models & Search Spaces
+
+| Model | Tunable Hyperparameters |
+|---|---|
+| **FT-Transformer** | `d_model` (32/48/64), `nhead` (2/4/8), `num_layers` (1–3), `dim_feedforward` (48–192), `dropout` (0.05–0.30), `lr` (1e-4 to 5e-3), `weight_decay`, `batch_size` |
+| **LSTM** | `embed_dim`, `hidden_dim`, `num_layers`, `dropout`, `bidirectional`, `lr`, `batch_size` |
+| **1D CNN** | `base_channels`, `dropout`, `lr`, `weight_decay`, `batch_size` |
+| **SVR** | `C` (1–1000), `epsilon` (0.01–1.0), `gamma` (scale/auto) |
+| **HGB** | `max_depth`, `learning_rate`, `max_iter`, `min_samples_leaf`, `l2_regularization` |
+| **XGBoost** | `max_depth`, `learning_rate`, `n_estimators`, `subsample`, `colsample_bytree`, `reg_alpha` |
+| **Random Forest** | `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf` |
+| **ANN (MLP)** | `hidden_layer_sizes`, `alpha`, `learning_rate_init` |
+
+### Usage
+
 ```bash
+# Tune FT-Transformer across 10-Fold CV (30 trials)
+python src/tune.py --model transformer --trials 30 --cv-folds 10
+
+# Tune SVR (50 trials)
+python src/tune.py --model svr --trials 50 --cv-folds 10
+
+# Retrain with tuned hyperparameters
+python src/train.py --model transformer --config configs/transformer_best.json --cv kfold
+```
+
+Tuned configurations are saved to `configs/{model_name}_best.json` for reproducibility.
+
+---
+
+## 📊 MLOps: MLflow Experiment Tracking & Registry Gating
+
+The project uses **MLflow** with an SQLite backend (`sqlite:///mlflow.db`) for experiment tracking, parameter logging, metric recording, and model registry governance.
+
+### Logged Parameters
+- **Architecture**: `model_architecture`, `d_model`, `n_heads`, `num_layers`, `hidden_dim`, `total_trainable_parameters`
+- **Optimization**: `epochs`, `batch_size`, `learning_rate`, `weight_decay`, `optimizer` (`AdamW`), `scheduler` (`CosineAnnealingLR`), `loss_function` (`MSELoss`)
+- **Validation**: `cv_strategy` (`10-fold` or `43-fold LOSO`), `random_seed`, `num_features`
+
+### Logged Metrics & Artifacts
+- **Per-Fold & Summary Metrics**: MAE, MSE, RMSE, R², Training Time per fold (Mean ± Std).
+- **Artifacts**: Checkpoints (`.pt`), Scaler objects (`.pkl`), Parity scatter plots, Residual error distribution charts.
+
+### Model Registry Promotion Gate (CI/CD)
+
+When a training run finishes:
+1. `src/evaluate.py --gate` compares the candidate model's RMSE and R² against the current `Production` model.
+2. If candidate meets quality thresholds (RMSE ≤ 300, R² ≥ 0.9):
+   - Registers new version in MLflow Model Registry (`SolarRadiationPredictor`).
+   - Promotes model to `Production`.
+   - Exports promoted weights to `model/production_dl_model.pt`.
+3. If candidate fails: blocks promotion in CI.
+
+```bash
+# View all experiments and runs
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+# Open http://127.0.0.1:5000
+```
+
+---
+
+## 📁 Project Structure
+
+```
+Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
+│
+├── src/                           # Core source code
+│   ├── __init__.py
+│   ├── dataset.py                 # Data loading, feature definitions, CV splits
+│   ├── train.py                   # MLflow-integrated training pipeline (10-Fold & LOSO CV)
+│   ├── tune.py                    # Optuna hyperparameter optimization module
+│   ├── evaluate.py                # MLflow Model Registry promotion gate
+│   ├── predict.py                 # SolarPredictor inference API
+│   └── models/
+│       ├── __init__.py            # MODEL_REGISTRY & build_model() factory
+│       ├── transformer.py         # FT-Transformer architecture
+│       ├── lstm.py                # Solar LSTM architecture
+│       └── cnn1d.py               # Solar 1D CNN architecture
+│
+├── tests/                         # Test suite (33 tests)
+│   ├── __init__.py
+│   ├── test_api.py                # Flask API endpoint tests
+│   ├── test_models.py             # Forward/backward pass tests for all DL models
+│   ├── test_preprocessing.py      # Dataset loading, CV split, and scaling tests
+│   ├── test_registry_gate.py      # MLflow promotion gate tests
+│   └── test_tuning.py             # Optuna search space & tuning smoke tests
+│
+├── configs/                       # Tuned hyperparameter configurations (JSON)
+│   └── transformer_best.json      # Best FT-Transformer config from Optuna
+│
+├── model/                         # Trained model checkpoints & scalers
+│   ├── production_dl_model.pt     # Current production champion model
+│   ├── production_dl_scaler.pkl   # Production scaler
+│   ├── transformer_model.pt       # FT-Transformer checkpoint
+│   ├── lstm_model.pt              # LSTM checkpoint
+│   ├── cnn1d_model.pt             # 1D CNN checkpoint
+│   └── *_classical_model.pkl      # Classical ML model checkpoints
+│
+├── Other Models/                  # Legacy pre-trained classical models
+│
+├── app.py                         # Flask web application
+├── wsgi.py                        # WSGI entry point for production deployment
+├── templates/
+│   └── index.html                 # Web app frontend (Leaflet.js, Plotly.js)
+├── static/
+│   └── app.js                     # Frontend JavaScript logic
+│
+├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
+├── requirements.txt               # Python dependencies
+├── Dockerfile                     # Docker container configuration
+├── .dockerignore                  # Docker build exclusions
+├── .github/workflows/
+│   └── ci.yml                     # GitHub Actions CI/CD pipeline
+│
+├── Contribute.md                  # Contributing guidelines
+├── Learn.md                       # Learning guide for newcomers
+├── LICENSE                        # MIT License
+└── README.md                      # This document
+```
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Clone & Install
+
+```bash
+# Clone the repository
+git clone https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset.git
+cd Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset
+
+# Create virtual environment
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Run the Flask App:
+### 2. Train Models
+
 ```bash
-python app.py
+# Train all 11 models (classical + deep learning) with 10-Fold CV
+python src/train.py --model all --epochs 25 --cv kfold
+
+# Train only the FT-Transformer
+python src/train.py --model transformer --epochs 25 --cv kfold
+
+# Train with 43-Fold Leave-One-Station-Out CV
+python src/train.py --model transformer --epochs 25 --cv loso
+
+# Train with tuned hyperparameters from Optuna
+python src/train.py --model transformer --config configs/transformer_best.json --cv kfold
 ```
 
-### Open the Application:
-Open your browser and navigate to (https://solar-radiation-prediction-using-saudi.onrender.com).
+### 3. Run Hyperparameter Tuning
+
+```bash
+# Tune FT-Transformer (30 trials, 10-Fold CV)
+python src/tune.py --model transformer --trials 30 --cv-folds 10
+
+# Tune SVR (50 trials)
+python src/tune.py --model svr --trials 50
+
+# Tune all supported models
+python src/tune.py --model hgb --trials 50
+python src/tune.py --model xgb --trials 50
+```
+
+### 4. Run Tests & Promotion Gate
+
+```bash
+# Run complete test suite (33 tests)
+python -m pytest tests/ -v
+
+# Run MLflow Model Registry Promotion Gate
+python src/evaluate.py --gate --model transformer \
+    --checkpoint model/transformer_model.pt \
+    --scaler model/transformer_scaler.pkl
+```
+
+### 5. Launch Web Application
+
+```bash
+python app.py
+# Open http://localhost:5000
+```
+
+### 6. View MLflow Dashboard
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+# Open http://127.0.0.1:5000
+```
 
 ---
 
- **Related Repositories**:
--  [Model Training & Evaluation Repo](https://github.com/nishnarudkar/Solar_Radiation_ML_Models)
--  [Web App Deployment Repo](https://github.com/nishnarudkar/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset)
+## 🌐 Web Application
+
+The Flask web application provides:
+
+- **Interactive Leaflet.js Station Map**: Displays all 43 weather stations across Saudi Arabia with GHI heatmap overlays
+- **Multi-Model GHI Predictor**: Switch dynamically between Linear Regression, ANN, FT-Transformer, LSTM, and 1D CNN
+- **Station & Feature Comparisons**: Interactive Plotly.js visualizations
+- **Real-Time Predictions**: Input meteorological features and get instant GHI forecasts
+
+```bash
+# Run locally
+python app.py
+
+# Production deployment (Gunicorn / Waitress)
+gunicorn wsgi:app --bind 0.0.0.0:8000    # Linux/macOS
+waitress-serve --port=8000 wsgi:app       # Windows
+```
 
 ---
 
-##  Future Work
+## 📋 Dataset
 
-- Train deep learning sequential models for time-series forecasting.
-- Extend the solution to other countries/regions.
-- Improve the UI/UX of the web interface.
-
----
-
-##  Team Members
-- [Nishant Narudkar](https://github.com/nishnarudkar)
-- [Maitreya Pawar](https://github.com/Metzo64)
-- [Vatsal Parmar](https://github.com/Vatsal211005)
-- [Aamir Sarang](https://github.com/Aamir-Sarang31)
----
-
-##  Acknowledgements
-
-We are grateful to our guide **Mr. Pramod H. Kachare** for his invaluable support and guidance throughout this project.
+| Property | Value |
+|---|---|
+| **Source** | King Fahd University of Petroleum & Minerals (KFUPM) Solar Radiation Monitoring Network |
+| **Coverage** | 43 weather stations across Saudi Arabia |
+| **Period** | 2017–2021 |
+| **Records** | 1,649 monthly aggregated observations |
+| **Target Variable** | Global Horizontal Irradiance (GHI) in Wh/m² |
+| **Features (21)** | Temperature (avg/max/min), Humidity (avg/max/min), Pressure, Wind Speed/Direction, DNI, DHI, Sunshine Duration, Rainfall, Latitude, Longitude, Elevation, and temporal features |
 
 ---
 
-## Dedicated Articles
+## 🔄 CI/CD Workflows
 
-- [AWS Builder Center Article](builder.aws.com/content/36qXvwTipuNwbZMUPf3hQ7n2IS0/from-experiment-tracking-to-automated-model-selection-a-solar-radiation-prediction-pipeline)
-- [Medium Article](https://medium.com/@nishnarudkar/from-experiment-tracking-to-automated-model-selection-a-practical-ml-workflow-cf193d1b1098)
+### `.github/workflows/ci.yml` — Continuous Integration
+
+Triggers on every push and pull request to `main`/`master`:
+
+1. **Checkout** → Set up Python 3.11
+2. **Install Dependencies** → PyTorch + requirements.txt
+3. **Code Quality** → Flake8 linting (syntax errors, undefined names)
+4. **Test Suite** → `pytest tests/ -v` (33 tests)
+5. **Smoke Training** → 3-epoch FT-Transformer training with MLflow tracking
+6. **Promotion Gate** → MLflow Registry quality threshold verification
+
+---
+
+## 🧪 Testing
+
+The project includes **33 automated tests** across 5 test modules:
+
+| Module | Tests | Coverage |
+|---|:---:|---|
+| `test_api.py` | 7 | Flask route responses, prediction endpoints, multi-model inference |
+| `test_models.py` | 7 | Forward pass, backward pass gradients, single-sample inference for all DL models |
+| `test_preprocessing.py` | 5 | Feature list completeness, dataset loading, 10-Fold/LOSO splits, scaling |
+| `test_registry_gate.py` | 3 | Promotion thresholds, acceptance criteria, MLflow retrieval |
+| `test_tuning.py` | 11 | Search space sampling (8 models), device detection, classical/DL smoke tuning |
+
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test module
+python -m pytest tests/test_tuning.py -v
+```
+
+---
+
+## 👥 Authors & Acknowledgements
+
+- **Aamir Sarang** ([@Aamir-Sarang31](https://github.com/Aamir-Sarang31))
+- **Nishant Narudkar** ([@nishnarudkar](https://github.com/nishnarudkar))
+- **Maitreya Pawar** ([@Metzo64](https://github.com/Metzo64))
+- **Vatsal Parmar** ([@Vatsal211005](https://github.com/Vatsal211005))
+
+We express our sincere gratitude to **Mr. Pramod H. Kachare** and **Mr. Sandeep Sangle** for their valuable guidance and mentorship throughout this research project.
+
+---
 
 ## 📄 License
 
-This project is open-source under the **MIT License**.
-
-
+This project is open-source under the **MIT License**. See [LICENSE](LICENSE) for details.

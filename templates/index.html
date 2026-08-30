@@ -313,6 +313,19 @@
                 <div class="row">
                     <div class="col-md-12">
                         <h3>GHI Prediction</h3>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="modelSelect"><strong>Select Model Architecture:</strong></label>
+                                <select id="modelSelect" class="form-select border-success shadow-sm">
+                                    <option value="transformer" selected>Transformer (FT-Transformer - Self-Attention)</option>
+                                    <option value="linear_regression">Linear Regression (Baseline Deployed)</option>
+                                    <option value="lstm">Solar LSTM (Recurrent Deep Net)</option>
+                                    <option value="cnn1d">1D CNN (Convolutional Deep Net)</option>
+                                    <option value="ann">Artificial Neural Network (ANN)</option>
+                                </select>
+                                <small class="text-muted">Choose between classical baseline and deep learning architectures.</small>
+                            </div>
+                        </div>
                         <form id="predictionForm">
                             <div class="row row-cols-1 row-cols-md-3 g-4">
                                 <!-- Row 1 -->

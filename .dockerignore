@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.git/
+.gitignore
+.env
+mlruns/
+mlruns.db
+mlflow.db
+Demo_video.mp4
+Springer_Nature_LaTeX_Template.pdf
+.system_generated/
+scratch/

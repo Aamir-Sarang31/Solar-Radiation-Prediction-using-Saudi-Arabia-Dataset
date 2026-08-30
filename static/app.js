@@ -555,8 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
             'Barometric Pressure Uncertainty (mB (hPa equiv))': parseFloat(document.getElementById('pressureUncertainty').value)
         };
 
+        const selectedModel = document.getElementById('modelSelect') ? document.getElementById('modelSelect').value : 'linear_regression';
+        inputData['model_type'] = selectedModel;
+
         // Validate inputs
         for (const [key, value] of Object.entries(inputData)) {
+            if (key === 'model_type') continue;
             if (isNaN(value) || value === null || value === undefined) {
                 predictionResultDiv.innerHTML = `
                     <div class="alert alert-danger">Invalid input for ${key}. Please enter a valid number.</div>
@@ -565,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        predictionResultDiv.innerHTML = '<p>Predicting...</p>';
+        predictionResultDiv.innerHTML = `<p>Predicting with <strong>${selectedModel.toUpperCase()}</strong>...</p>`;
         fetch('/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -583,7 +587,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     alertClass = 'alert-warning';
                 }
-                predictionResultDiv.innerHTML = `<div class="alert ${alertClass}">Predicted GHI: ${prediction} Wh/m²</div>`;
+                const modelLabel = data.model_used ? data.model_used.toUpperCase() : selectedModel.toUpperCase();
+                predictionResultDiv.innerHTML = `
+                    <div class="alert ${alertClass} shadow-sm">
+                        <h5 class="mb-1">Predicted GHI: <strong>${prediction} Wh/m²</strong></h5>
+                        <small class="text-muted">Model Architecture: <strong>${modelLabel}</strong></small>
+                    </div>
+                `;
             } else {
                 throw new Error(data.error || 'Unknown prediction error');
             }
