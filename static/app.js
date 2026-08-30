@@ -1,670 +1,772 @@
+/**
+ * HelioForecast - Modern Solar Radiation Prediction & Analytics Frontend
+ * Handles Leaflet.js Mapping, Plotly Visualizations, 1-Click City Presets,
+ * Real-time Predictions, and 11-Model Benchmark Leaderboard.
+ */
+
+// 1-Click City Meteorological Presets (Extracted from 1,649 KFUPM verified records)
+const CITY_PRESETS = {
+    "Riyadh": {
+        "DNI (Wh/m2)": 5362.90,
+        "DHI (Wh/m2)": 2272.65,
+        "Standard Deviation DNI (Wh/m2)": 1716.20,
+        "Standard Deviation DHI (Wh/m2)": 557.19,
+        "Standard Deviation GHI (Wh/m2)": 708.68,
+        "Air Temperature (C°)": 27.78,
+        "Relative Humidity (%)": 26.30,
+        "Barometric Pressure (mB (hPa equiv))": 937.66,
+        "Wind Speed at 3m (m/s)": 1.91,
+        "Wind Speed at 3m (std dev) (m/s)": 1.11,
+        "Wind Direction at 3m (°N)": 173.31,
+        "Peak Wind Speed at 3m (m/s)": 12.18,
+        "DNI Uncertainty (Wh/m2)": 939.44,
+        "DHI Uncertainty (Wh/m2)": 402.19,
+        "GHI Uncertainty (Wh/m2)": 853.25,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.00,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 4.69,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.00,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.07,
+        "Wind Direction at 3m Uncertainty (°N)": 3.87
+    },
+    "Jeddah": {
+        "DNI (Wh/m2)": 4636.08,
+        "DHI (Wh/m2)": 2241.48,
+        "Standard Deviation DNI (Wh/m2)": 1500.80,
+        "Standard Deviation DHI (Wh/m2)": 522.10,
+        "Standard Deviation GHI (Wh/m2)": 571.75,
+        "Air Temperature (C°)": 29.68,
+        "Relative Humidity (%)": 59.04,
+        "Barometric Pressure (mB (hPa equiv))": 1002.62,
+        "Wind Speed at 3m (m/s)": 3.41,
+        "Wind Speed at 3m (std dev) (m/s)": 2.03,
+        "Wind Direction at 3m (°N)": 307.43,
+        "Peak Wind Speed at 3m (m/s)": 16.08,
+        "DNI Uncertainty (Wh/m2)": 801.79,
+        "DHI Uncertainty (Wh/m2)": 361.99,
+        "GHI Uncertainty (Wh/m2)": 726.68,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.01,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 5.03,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.09,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.10,
+        "Wind Direction at 3m Uncertainty (°N)": 3.78
+    },
+    "Makkah": {
+        "DNI (Wh/m2)": 4928.67,
+        "DHI (Wh/m2)": 2355.53,
+        "Standard Deviation DNI (Wh/m2)": 1671.23,
+        "Standard Deviation DHI (Wh/m2)": 594.65,
+        "Standard Deviation GHI (Wh/m2)": 661.70,
+        "Air Temperature (C°)": 30.64,
+        "Relative Humidity (%)": 34.32,
+        "Barometric Pressure (mB (hPa equiv))": 975.37,
+        "Wind Speed at 3m (m/s)": 2.15,
+        "Wind Speed at 3m (std dev) (m/s)": 1.53,
+        "Wind Direction at 3m (°N)": 234.17,
+        "Peak Wind Speed at 3m (m/s)": 16.57,
+        "DNI Uncertainty (Wh/m2)": 834.20,
+        "DHI Uncertainty (Wh/m2)": 364.81,
+        "GHI Uncertainty (Wh/m2)": 768.18,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.01,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 4.91,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.05,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.10,
+        "Wind Direction at 3m Uncertainty (°N)": 3.96
+    },
+    "Dhahran": {
+        "DNI (Wh/m2)": 4772.51,
+        "DHI (Wh/m2)": 2031.85,
+        "Standard Deviation DNI (Wh/m2)": 1673.23,
+        "Standard Deviation DHI (Wh/m2)": 531.20,
+        "Standard Deviation GHI (Wh/m2)": 695.07,
+        "Air Temperature (C°)": 27.26,
+        "Relative Humidity (%)": 52.84,
+        "Barometric Pressure (mB (hPa equiv))": 1003.84,
+        "Wind Speed at 3m (m/s)": 1.33,
+        "Wind Speed at 3m (std dev) (m/s)": 0.77,
+        "Wind Direction at 3m (°N)": 184.38,
+        "Peak Wind Speed at 3m (m/s)": 7.91,
+        "DNI Uncertainty (Wh/m2)": 774.41,
+        "DHI Uncertainty (Wh/m2)": 308.95,
+        "GHI Uncertainty (Wh/m2)": 679.45,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.02,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 5.06,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.00,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.05,
+        "Wind Direction at 3m Uncertainty (°N)": 2.92
+    },
+    "Tabuk": {
+        "DNI (Wh/m2)": 6970.92,
+        "DHI (Wh/m2)": 1613.19,
+        "Standard Deviation DNI (Wh/m2)": 1805.66,
+        "Standard Deviation DHI (Wh/m2)": 593.60,
+        "Standard Deviation GHI (Wh/m2)": 565.76,
+        "Air Temperature (C°)": 22.61,
+        "Relative Humidity (%)": 27.49,
+        "Barometric Pressure (mB (hPa equiv))": 926.14,
+        "Wind Speed at 3m (m/s)": 2.33,
+        "Wind Speed at 3m (std dev) (m/s)": 1.32,
+        "Wind Direction at 3m (°N)": 260.97,
+        "Peak Wind Speed at 3m (m/s)": 14.47,
+        "DNI Uncertainty (Wh/m2)": 1327.04,
+        "DHI Uncertainty (Wh/m2)": 385.72,
+        "GHI Uncertainty (Wh/m2)": 981.65,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.01,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 4.65,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.05,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.09,
+        "Wind Direction at 3m Uncertainty (°N)": 3.84
+    },
+    "Al Ahsa": {
+        "DNI (Wh/m2)": 4935.08,
+        "DHI (Wh/m2)": 2221.19,
+        "Standard Deviation DNI (Wh/m2)": 1676.87,
+        "Standard Deviation DHI (Wh/m2)": 552.57,
+        "Standard Deviation GHI (Wh/m2)": 701.51,
+        "Air Temperature (C°)": 27.72,
+        "Relative Humidity (%)": 29.85,
+        "Barometric Pressure (mB (hPa equiv))": 993.69,
+        "Wind Speed at 3m (m/s)": 1.28,
+        "Wind Speed at 3m (std dev) (m/s)": 0.81,
+        "Wind Direction at 3m (°N)": 182.00,
+        "Peak Wind Speed at 3m (m/s)": 9.76,
+        "DNI Uncertainty (Wh/m2)": 848.51,
+        "DHI Uncertainty (Wh/m2)": 389.50,
+        "GHI Uncertainty (Wh/m2)": 774.97,
+        "Air Temperature Uncertainty (C°)": 0.51,
+        "Relative Humidity Uncertainty (%)": 3.02,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 5.01,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.00,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.04,
+        "Wind Direction at 3m Uncertainty (°N)": 3.05
+    },
+    "Madinah": {
+        "DNI (Wh/m2)": 5797.52,
+        "DHI (Wh/m2)": 2040.83,
+        "Standard Deviation DNI (Wh/m2)": 1772.36,
+        "Standard Deviation DHI (Wh/m2)": 582.47,
+        "Standard Deviation GHI (Wh/m2)": 665.88,
+        "Air Temperature (C°)": 28.15,
+        "Relative Humidity (%)": 21.62,
+        "Barometric Pressure (mB (hPa equiv))": 939.11,
+        "Wind Speed at 3m (m/s)": 2.47,
+        "Wind Speed at 3m (std dev) (m/s)": 1.31,
+        "Wind Direction at 3m (°N)": 239.75,
+        "Peak Wind Speed at 3m (m/s)": 15.04,
+        "DNI Uncertainty (Wh/m2)": 814.89,
+        "DHI Uncertainty (Wh/m2)": 286.93,
+        "GHI Uncertainty (Wh/m2)": 693.25,
+        "Air Temperature Uncertainty (C°)": 0.50,
+        "Relative Humidity Uncertainty (%)": 3.00,
+        "Barometric Pressure Uncertainty (mB (hPa equiv))": 4.71,
+        "Wind Speed at 3m Uncertainty (m/s)": 0.04,
+        "Peak Wind Speed at 3m Uncertainty (m/s)": 0.10,
+        "Wind Direction at 3m Uncertainty (°N)": 3.97
+    }
+};
+
+// Controlled 11-Model Benchmark Data
+const BENCHMARK_MODELS = [
+    { rank: "🥇 1", name: "FT-Transformer (Ours)", category: "Deep Learning", mae: "94.38 ± 6.27", rmse: 126.21, rmse_str: "126.21 ± 13.17", r2: "0.9896 ± 0.0026", time: "1.94s", champion: true, status: "Production Champion" },
+    { rank: "🥈 2", name: "Artificial Neural Net (ANN)", category: "Neural Baseline", mae: "129.13 ± 9.53", rmse: 172.50, rmse_str: "172.50 ± 14.25", r2: "0.9807 ± 0.0037", time: "0.36s", champion: false, status: "Evaluated" },
+    { rank: "🥉 3", name: "Histogram Gradient Boosting (HGB)", category: "Ensemble", mae: "129.37 ± 12.36", rmse: 178.39, rmse_str: "178.39 ± 22.46", r2: "0.9792 ± 0.0055", time: "0.16s", champion: false, status: "Evaluated" },
+    { rank: "4", name: "Support Vector Regression (SVR)", category: "Classical", mae: "114.11 ± 9.95", rmse: 188.36, rmse_str: "188.36 ± 35.15", r2: "0.9765 ± 0.0080", time: "0.04s", champion: false, status: "Evaluated" },
+    { rank: "5", name: "Linear Regression (LR)", category: "Classical", mae: "134.28 ± 9.64", rmse: 194.14, rmse_str: "194.14 ± 42.34", r2: "0.9746 ± 0.0122", time: "0.00s", champion: false, status: "Baseline" },
+    { rank: "6", name: "Extreme Gradient Boosting (XGBoost)", category: "Ensemble", mae: "155.65 ± 11.10", rmse: 215.21, rmse_str: "215.21 ± 20.70", r2: "0.9697 ± 0.0067", time: "0.10s", champion: false, status: "Evaluated" },
+    { rank: "7", name: "Random Forest (RF)", category: "Ensemble", mae: "163.60 ± 17.87", rmse: 230.28, rmse_str: "230.28 ± 26.87", r2: "0.9653 ± 0.0090", time: "0.22s", champion: false, status: "Evaluated" },
+    { rank: "8", name: "Solar 1D CNN (Ours)", category: "Deep Learning", mae: "241.06 ± 15.84", rmse: 318.02, rmse_str: "318.02 ± 24.57", r2: "0.9340 ± 0.0141", time: "1.83s", champion: false, status: "Evaluated" },
+    { rank: "9", name: "Solar LSTM (Ours)", category: "Deep Learning", mae: "273.68 ± 40.51", rmse: 362.18, rmse_str: "362.18 ± 55.91", r2: "0.9117 ± 0.0335", time: "1.62s", champion: false, status: "Evaluated" },
+    { rank: "10", name: "Decision Tree (DT)", category: "Classical", mae: "280.33 ± 23.14", rmse: 410.28, rmse_str: "410.28 ± 51.76", r2: "0.8895 ± 0.0312", time: "0.01s", champion: false, status: "Baseline" },
+    { rank: "11", name: "K-Nearest Neighbors (KNN)", category: "Classical", mae: "337.79 ± 22.74", rmse: 447.20, rmse_str: "447.20 ± 27.45", r2: "0.8699 ± 0.0236", time: "0.00s", champion: false, status: "Baseline" }
+];
+
+let map, baseLayerDark, baseLayerLight, markers = {}, gradientCircles = [], isGradientView = false;
+let currentTheme = localStorage.getItem('helio_theme') || 'dark';
+
 document.addEventListener('DOMContentLoaded', () => {
-    const map = L.map('map', {
-        center: [24.0, 45.0],
-        zoom: 5,
+    // 1. Initialize Theme
+    applyTheme(currentTheme);
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // 2. Initialize Leaflet Map
+    initMap();
+
+    // 3. Initialize Select2 Components
+    initSelect2();
+
+    // 4. Load Stations and Populate Selectors
+    loadInitialData();
+
+    // 5. Populate Default City Preset (Riyadh)
+    applyPreset('Riyadh');
+
+    // 6. Populate Leaderboard Table & Chart
+    renderLeaderboard('all');
+
+    // 7. Prediction Form Submit Handler
+    document.getElementById('predictionForm').addEventListener('submit', handlePredictionSubmit);
+
+    // 8. Station Comparison Run Handler
+    document.getElementById('runComparison').addEventListener('click', handleStationComparison);
+
+    // 9. Monthly Resource Event Listeners
+    document.getElementById('stationSelect').addEventListener('change', (e) => loadStationDetails(e.target.value));
+    $('#parameterSelect').on('change', () => loadStationDetails(document.getElementById('stationSelect').value));
+    document.getElementById('chartType').addEventListener('change', () => loadStationDetails(document.getElementById('stationSelect').value));
+    document.getElementById('yearSelect').addEventListener('change', () => loadStationDetails(document.getElementById('stationSelect').value));
+
+    // 10. Gradient Map Toggle
+    document.getElementById('toggleHeatmap').addEventListener('click', toggleGradientView);
+});
+
+/* Theme Handling */
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const icon = document.getElementById('themeIcon');
+    if (theme === 'dark') {
+        icon.className = 'fa-solid fa-sun';
+    } else {
+        icon.className = 'fa-solid fa-moon';
+    }
+    localStorage.setItem('helio_theme', theme);
+    currentTheme = theme;
+
+    // Switch map base tiles if map is initialized
+    if (map) {
+        if (theme === 'dark') {
+            if (baseLayerLight && map.hasLayer(baseLayerLight)) map.removeLayer(baseLayerLight);
+            baseLayerDark.addTo(map);
+        } else {
+            if (baseLayerDark && map.hasLayer(baseLayerDark)) map.removeLayer(baseLayerDark);
+            baseLayerLight.addTo(map);
+        }
+    }
+}
+
+function toggleTheme() {
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
+/* Leaflet Map Setup */
+function initMap() {
+    map = L.map('map', {
+        center: [24.2, 44.5],
+        zoom: 5.5,
         zoomControl: true
     });
 
-    let markers = {};
-    let gradientCircles = [];
-    let isGradientView = false;
-    const colorPalette = ['#1E5631', '#FF5733', '#FFC107', '#28A745', '#007BFF', '#6F42C1', '#E83E8C'];
-    let ghiThresholds = { low: 4500, high: 6800 }; // Fallback values
-
-    const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+    baseLayerDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://carto.com/">CARTO</a> OpenStreetMap',
         maxZoom: 19
-    }).addTo(map);
-
-    const fallbackLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles © Esri'
     });
 
-    map.on('tileerror', () => {
-        console.warn('Tile loading failed, switching to fallback layer');
-        map.removeLayer(baseLayer);
-        fallbackLayer.addTo(map);
+    baseLayerLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://carto.com/">CARTO</a> OpenStreetMap',
+        maxZoom: 19
     });
 
-    // Initialize Bootstrap tooltips
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+    if (currentTheme === 'dark') {
+        baseLayerDark.addTo(map);
+    } else {
+        baseLayerLight.addTo(map);
+    }
+}
 
-    // Initialize Select2 for multi-select dropdowns
-    $('#parameterSelect').select2({
-        placeholder: "Select Parameters",
-        width: '100%'
-    });
+function initSelect2() {
+    $('#parameterSelect').select2({ placeholder: "Choose Parameters", width: '100%' });
+    $('#compareStations').select2({ placeholder: "Choose 2+ Stations", width: '100%' });
+    $('#compareParams').select2({ placeholder: "Choose Parameters", width: '100%' });
+}
 
-    $('#compareStations').select2({
-        placeholder: "Select Stations",
-        width: '100%'
-    });
+function loadInitialData() {
+    // 1. Fetch Station Names
+    fetch('/get-station-names')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('stationSelect');
+            const compSelect = $('#compareStations');
+            select.innerHTML = '';
+            compSelect.empty();
 
-    $('#compareParams').select2({
-        placeholder: "Select Parameters",
-        width: '100%'
-    });
-
-    function populateStationSelects() {
-        fetch('/get-station-names')
-            .then(response => response.json())
-            .then(data => {
-                const stationSelect = document.getElementById('stationSelect');
-                const compareStations = $('#compareStations');
-
-                data.stations.forEach(station => {
-                    const option = document.createElement('option');
-                    option.value = station;
-                    option.textContent = station;
-                    stationSelect.appendChild(option);
-                    const compareOption = new Option(station, station, false, false);
-                    compareStations.append(compareOption);
+            if (data.stations) {
+                document.getElementById('kpiStations').textContent = data.stations.length;
+                data.stations.forEach(st => {
+                    const opt = new Option(st, st);
+                    select.add(new Option(st, st));
+                    compSelect.append(new Option(st, st));
                 });
-
-                compareStations.trigger('change');
-
                 if (data.stations.length > 0) {
-                    stationSelect.value = data.stations[0];
+                    select.value = data.stations[0];
                     loadStationDetails(data.stations[0]);
                 }
-            })
-            .catch(error => console.error('Error fetching station names:', error));
-    }
+            }
+        })
+        .catch(err => console.error("Error fetching station names:", err));
 
-    function loadMapData() {
-        const statusDiv = document.getElementById('mapStatus') || document.createElement('div');
-        statusDiv.id = 'mapStatus';
-        statusDiv.className = 'map-status';
-        statusDiv.textContent = 'Loading map data...';
-        document.getElementById('map').parentNode.insertBefore(statusDiv, document.getElementById('map').nextSibling);
+    // 2. Fetch Map Data
+    fetch('/map-data')
+        .then(res => res.json())
+        .then(stations => {
+            if (!Array.isArray(stations)) return;
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
 
-        fetch('/get-ghi-thresholds')
-            .then(response => response.json())
-            .then(thresholds => {
-                ghiThresholds = thresholds;
-                console.log('Updated GHI Thresholds:', ghiThresholds);
-                
-                fetch('/map-data')
-                    .then(response => {
-                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                        return response.json();
-                    })
-                    .then(data => {
-                        statusDiv.textContent = '';
-                        Object.values(markers).forEach(marker => map.removeLayer(marker));
-                        gradientCircles.forEach(circle => map.removeLayer(circle));
-                        markers = {};
-                        gradientCircles = [];
+            stations.forEach(st => {
+                const ghi = st.avg_ghi || 5500;
+                let markerColor = '#10b981'; // Green (high GHI)
+                if (ghi < 5000) markerColor = '#f43f5e';
+                else if (ghi < 6200) markerColor = '#f59e0b';
 
-                        data.forEach(station => {
-                            if (!station.latitude || !station.longitude || !station.avg_ghi) {
-                                console.warn(`Invalid data for station ${station.station_name}:`, station);
-                                return;
-                            }
+                const marker = L.circleMarker([st.latitude, st.longitude], {
+                    radius: 7,
+                    fillColor: markerColor,
+                    color: '#ffffff',
+                    weight: 1.5,
+                    opacity: 0.9,
+                    fillOpacity: 0.85
+                }).addTo(map);
 
-                            const marker = L.marker([station.latitude, station.longitude], {
-                                icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png' })
-                            })
-                            .bindPopup(`<b>${station.station_name}</b><br>GHI: ${station.avg_ghi.toFixed(2)} Wh/m²`)
-                            .addTo(map);
+                marker.bindPopup(`
+                    <div style="font-family: 'Inter', sans-serif; font-size: 0.88rem;">
+                        <strong style="color:#10b981;">${st.station_name}</strong><br>
+                        <span style="color:#64748b;">Latitude:</span> ${st.latitude.toFixed(2)}°N<br>
+                        <span style="color:#64748b;">Longitude:</span> ${st.longitude.toFixed(2)}°E<br>
+                        <span style="color:#f59e0b; font-weight:600;">Avg GHI:</span> ${ghi.toFixed(1)} Wh/m²
+                    </div>
+                `);
 
-                            marker.on('mouseover', () => {
-                                marker.setIcon(L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png' }));
-                            });
-                            marker.on('mouseout', () => {
-                                marker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png' }));
-                            });
-                            marker.on('click', () => {
-                                document.getElementById('stationSelect').value = station.station_name;
-                                loadStationDetails(station.station_name);
-                            });
+                marker.on('click', () => {
+                    document.getElementById('stationSelect').value = st.station_name;
+                    loadStationDetails(st.station_name);
+                });
 
-                            markers[station.station_name] = marker;
+                markers[st.station_name] = marker;
 
-                            let circleColor;
-                            if (station.avg_ghi > ghiThresholds.high) {
-                                circleColor = '#28A745';
-                            } else if (station.avg_ghi >= ghiThresholds.low) {
-                                circleColor = '#FFC107';
-                            } else {
-                                circleColor = '#FF5733';
-                            }
-
-                            const circle = L.circle([station.latitude, station.longitude], {
-                                radius: 20000,
-                                color: circleColor,
-                                fillColor: circleColor,
-                                fillOpacity: 0.5,
-                                weight: 1
-                            }).bindPopup(`<b>${station.station_name}</b><br>GHI: ${station.avg_ghi.toFixed(2)} Wh/m²`);
-
-                            gradientCircles.push(circle);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading map data:', error);
-                        statusDiv.textContent = `Error loading map: ${error.message}. Check server connection or data.`;
-                    });
-            })
-            .catch(error => {
-                console.error('Error loading thresholds:', error);
-                fetch('/map-data')
-                    .then(response => response.json())
-                    .then(data => {
-                        statusDiv.textContent = '';
-                        Object.values(markers).forEach(marker => map.removeLayer(marker));
-                        gradientCircles.forEach(circle => map.removeLayer(circle));
-                        markers = {};
-                        gradientCircles = [];
-
-                        data.forEach(station => {
-                            if (!station.latitude || !station.longitude || !station.avg_ghi) {
-                                console.warn(`Invalid data for station ${station.station_name}:`, station);
-                                return;
-                            }
-
-                            const marker = L.marker([station.latitude, station.longitude], {
-                                icon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png' })
-                            })
-                            .bindPopup(`<b>${station.station_name}</b><br>GHI: ${station.avg_ghi.toFixed(2)} Wh/m²`)
-                            .addTo(map);
-
-                            marker.on('mouseover', () => {
-                                marker.setIcon(L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png' }));
-                            });
-                            marker.on('mouseout', () => {
-                                marker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png' }));
-                            });
-                            marker.on('click', () => {
-                                document.getElementById('stationSelect').value = station.station_name;
-                                loadStationDetails(station.station_name);
-                            });
-
-                            markers[station.station_name] = marker;
-
-                            let circleColor;
-                            if (station.avg_ghi > ghiThresholds.high) {
-                                circleColor = '#28A745';
-                            } else if (station.avg_ghi >= ghiThresholds.low) {
-                                circleColor = '#FFC107';
-                            } else {
-                                circleColor = '#FF5733';
-                            }
-
-                            const circle = L.circle([station.latitude, station.longitude], {
-                                radius: 20000,
-                                color: circleColor,
-                                fillColor: circleColor,
-                                fillOpacity: 0.5,
-                                weight: 1
-                            }).bindPopup(`<b>${station.station_name}</b><br>GHI: ${station.avg_ghi.toFixed(2)} Wh/m²`);
-
-                            gradientCircles.push(circle);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading map data in fallback:', error);
-                        statusDiv.textContent = `Error loading map: ${error.message}. Check server connection or data.`;
-                    });
+                // Gradient circle
+                const gradCircle = L.circle([st.latitude, st.longitude], {
+                    radius: 35000,
+                    fillColor: markerColor,
+                    fillOpacity: 0.12,
+                    stroke: false
+                });
+                gradientCircles.push(gradCircle);
             });
-    }
+        })
+        .catch(err => console.error("Error loading map data:", err));
 
-    document.getElementById('toggleHeatmap').addEventListener('click', () => {
-        isGradientView = !isGradientView;
-        if (isGradientView) {
-            Object.values(markers).forEach(marker => map.removeLayer(marker));
-            gradientCircles.forEach(circle => circle.addTo(map));
-            document.getElementById('toggleHeatmap').textContent = 'Switch to Normal Map';
-        } else {
-            gradientCircles.forEach(circle => map.removeLayer(circle));
-            Object.values(markers).forEach(marker => marker.addTo(map));
-            document.getElementById('toggleHeatmap').textContent = 'Toggle Gradient View';
+    // 3. Populate Available Comparison Parameters
+    fetch('/data-analysis')
+        .then(res => res.json())
+        .then(data => {
+            if (data.summary_stats) {
+                const compParams = $('#compareParams');
+                const paramSelect = $('#parameterSelect');
+                const params = new Set();
+                Object.keys(data.summary_stats).forEach(k => {
+                    const base = k.replace(/_(mean|min|max|std)$/, '');
+                    params.add(base);
+                });
+                params.forEach(p => {
+                    compParams.append(new Option(p, p));
+                    paramSelect.append(new Option(p, p));
+                });
+                // Default selections
+                paramSelect.val(['DNI (Wh/m2)', 'DHI (Wh/m2)', 'Air Temperature (C°)']).trigger('change');
+                compParams.val(['DNI (Wh/m2)', 'Air Temperature (C°)']).trigger('change');
+            }
+        })
+        .catch(err => console.error("Error fetching analysis parameters:", err));
+}
+
+function toggleGradientView() {
+    isGradientView = !isGradientView;
+    const btn = document.getElementById('toggleHeatmap');
+    if (isGradientView) {
+        gradientCircles.forEach(c => c.addTo(map));
+        btn.classList.add('btn-emerald');
+        btn.classList.remove('btn-ghost');
+    } else {
+        gradientCircles.forEach(c => map.removeLayer(c));
+        btn.classList.add('btn-ghost');
+        btn.classList.remove('btn-emerald');
+    }
+}
+
+function loadStationDetails(stationName) {
+    if (!stationName) return;
+    const year = document.getElementById('yearSelect').value;
+    const url = `/station-details?station=${encodeURIComponent(stationName)}${year ? '&year=' + year : ''}`;
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.details) return;
+            const detailsDiv = document.getElementById('stationDetails');
+            const d = data.details;
+            const m = data.mean_values || {};
+
+            detailsDiv.innerHTML = `
+                <div class="p-3 mb-2" style="background: rgba(15,23,42,0.5); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-weight: 700; color: var(--accent-emerald); font-size: 1.05rem;" class="mb-1">${d.station_name}</div>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary);" class="mb-2">
+                        <i class="fa-solid fa-location-dot me-1"></i>${d.latitude.toFixed(2)}°N, ${d.longitude.toFixed(2)}°E
+                    </div>
+                    <div class="row g-2 text-center" style="font-size: 0.8rem;">
+                        <div class="col-6">
+                            <div class="p-2" style="background: rgba(255,255,255,0.04); border-radius: var(--radius-sm);">
+                                <span class="d-block text-muted">Direct (DNI)</span>
+                                <strong style="color: var(--accent-solar); font-size: 0.95rem;">${(m['DNI (Wh/m2)'] || 0).toFixed(0)}</strong> Wh/m²
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2" style="background: rgba(255,255,255,0.04); border-radius: var(--radius-sm);">
+                                <span class="d-block text-muted">Avg Temperature</span>
+                                <strong style="color: var(--accent-emerald); font-size: 0.95rem;">${(m['Air Temperature (C°)'] || 0).toFixed(1)}</strong> °C
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Render Monthly Chart
+            renderMonthlyChart(data.monthly_chart_data);
+        })
+        .catch(err => console.error("Error loading station details:", err));
+}
+
+function renderMonthlyChart(chartData) {
+    if (!chartData || !chartData.months || !chartData.data) return;
+    const selectedParams = $('#parameterSelect').val() || ['DNI (Wh/m2)', 'Air Temperature (C°)'];
+    const chartType = document.getElementById('chartType').value;
+    const isDark = currentTheme === 'dark';
+
+    const traces = [];
+    const colors = ['#10b981', '#f59e0b', '#06b6d4', '#6366f1', '#f43f5e', '#a855f7'];
+
+    selectedParams.forEach((param, idx) => {
+        if (chartData.data[param]) {
+            const color = colors[idx % colors.length];
+            if (chartType === 'bar') {
+                traces.push({
+                    x: chartData.months,
+                    y: chartData.data[param],
+                    name: param,
+                    type: 'bar',
+                    marker: { color: color }
+                });
+            } else {
+                traces.push({
+                    x: chartData.months,
+                    y: chartData.data[param],
+                    name: param,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { shape: 'spline', smoothing: 1.2, width: 2.5, color: color },
+                    marker: { size: 6, color: color }
+                });
+            }
         }
     });
 
-    function loadStationDetails(stationName) {
-        fetch(`/station-details?station=${stationName}`)
-            .then(response => response.json())
-            .then(data => {
-                const detailsDiv = document.getElementById('stationDetails');
-                detailsDiv.innerHTML = `
-                    <p><strong>Station:</strong> ${stationName}</p>
-                    <p><strong>Latitude:</strong> ${data.details.latitude}</p>
-                    <p><strong>Longitude:</strong> ${data.details.longitude}</p>
-                `;
+    const layout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { family: 'Inter, sans-serif', color: isDark ? '#94a3b8' : '#475569', size: 11 },
+        margin: { t: 30, r: 20, l: 50, b: 40 },
+        legend: { orientation: 'h', y: 1.15, x: 0 },
+        xaxis: { gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+        yaxis: { gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
+    };
 
-                const paramSelect = $('#parameterSelect');
-                paramSelect.empty();
-                
-                const availableParams = Object.keys(data.monthly_chart_data.data);
-                
-                availableParams.forEach((param, index) => {
-                    const isSelected = index === 0;
-                    const option = new Option(param, param, isSelected, isSelected);
-                    paramSelect.append(option);
-                });
-                
-                paramSelect.trigger('change');
-                
-                const yearSelect = document.getElementById('mapViewYear');
-                if (yearSelect && yearSelect.options.length > 0) {
-                    yearSelect.selectedIndex = 0;
+    Plotly.newPlot('monthlyChart', traces, layout, { responsive: true, displayModeBar: false });
+}
+
+/* Station Comparison */
+function handleStationComparison() {
+    const stations = $('#compareStations').val();
+    const params = $('#compareParams').val();
+    if (!stations || stations.length < 2 || !params || params.length === 0) {
+        alert("Please select at least 2 stations and 1 parameter to compare.");
+        return;
+    }
+
+    fetch('/station-comparison', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stations: stations, params: params })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.values) return;
+        const isDark = currentTheme === 'dark';
+        const traces = [];
+        const colors = ['#10b981', '#f59e0b', '#06b6d4', '#6366f1', '#f43f5e'];
+
+        let cIdx = 0;
+        stations.forEach(st => {
+            params.forEach(p => {
+                if (data.values[st] && data.values[st][p]) {
+                    traces.push({
+                        x: data.dates[st] || [],
+                        y: data.values[st][p] || [],
+                        name: `${st} - ${p}`,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { width: 1.8, color: colors[cIdx % colors.length] }
+                    });
+                    cIdx++;
                 }
-                
-                updateMonthlyChart(stationName);
-            })
-            .catch(error => console.error('Error loading station details:', error));
-    }
-
-    function updateMonthlyChart(stationName) {
-        let selectedParams = $('#parameterSelect').val();
-        if (!selectedParams || selectedParams.length === 0) {
-            const firstParam = $('#parameterSelect option:first').val();
-            if (firstParam) {
-                selectedParams = [firstParam];
-                $('#parameterSelect').val([firstParam]).trigger('change');
-            }
-        }
-        
-        const yearSelect = document.getElementById('mapViewYear');
-        let year = yearSelect?.value || null;
-        
-        if (!selectedParams || selectedParams.length === 0) {
-            document.getElementById('monthlyChart').innerHTML = '<p>Please select at least one parameter</p>';
-            return;
-        }
-        
-        document.getElementById('monthlyChart').innerHTML = '<p>Loading chart...</p>';
-        const queryParams = new URLSearchParams({ station: stationName, year: year || '' });
-        
-        fetch(`/station-details?${queryParams}`)
-            .then(response => response.json())
-            .then(data => {
-                let xData, traces;
-                const yearDisplay = year || 'All Years';
-    
-                if (!year) {
-                    const yearlyData = {};
-                    selectedParams.forEach(param => yearlyData[param] = []);
-                    const years = ['2017', '2018', '2019', '2020', '2021'];
-    
-                    Promise.all(years.map(yr => fetch(`/station-details?station=${stationName}&year=${yr}`).then(res => res.json())))
-                        .then(results => {
-                            results.forEach(d => {
-                                selectedParams.forEach(param => {
-                                    const yearlyAvg = d.monthly_chart_data.data[param].reduce((a, b) => a + b, 0) / 12;
-                                    yearlyData[param].push(yearlyAvg);
-                                });
-                            });
-    
-                            xData = years;
-                            traces = selectedParams.map((param, index) => [
-                                {
-                                    x: xData,
-                                    y: yearlyData[param],
-                                    type: 'bar',
-                                    name: param,
-                                    hoverinfo: 'x+y',
-                                    marker: { color: colorPalette[index % colorPalette.length] },
-                                    width: 0.4
-                                },
-                                {
-                                    x: xData,
-                                    y: yearlyData[param],
-                                    type: 'scatter',
-                                    mode: 'lines+markers',
-                                    name: `${param} Trend`,
-                                    line: { color: colorPalette[index % colorPalette.length], width: 2 },
-                                    marker: { size: 8 }
-                                }
-                            ]).flat();
-                            
-                            const layout = {
-                                title: `Data for ${stationName} (${yearDisplay})`,
-                                barmode: 'overlay',
-                                height: 600,
-                                legend: {
-                                    orientation: 'h',
-                                    y: -0.2,
-                                    xanchor: 'center',
-                                    x: 0.5
-                                },
-                                xaxis: {
-                                    title: '',
-                                    tickmode: 'linear',
-                                    automargin: true
-                                },
-                                yaxis: {
-                                    title: '',
-                                    automargin: true
-                                },
-                                margin: {
-                                    t: 50,
-                                    b: 100
-                                }
-                            };
-    
-                            Plotly.newPlot('monthlyChart', traces, layout);
-                        });
-                } else {
-                    xData = data.monthly_chart_data.months;
-                    traces = selectedParams.map((param, index) => [
-                        {
-                            x: xData,
-                            y: data.monthly_chart_data.data[param],
-                            type: 'bar',
-                            name: param,
-                            hoverinfo: 'x+y',
-                            marker: { color: colorPalette[index % colorPalette.length] },
-                            width: 0.4
-                        },
-                        {
-                            x: xData,
-                            y: data.monthly_chart_data.data[param],
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            name: `${param} Trend`,
-                            line: { color: colorPalette[index % colorPalette.length], width: 2 },
-                            marker: { size: 8 }
-                        }
-                    ]).flat();
-    
-                    const layout = {
-                        title: `Data for ${stationName} (${yearDisplay})`,
-                        barmode: 'overlay',
-                        height: 600,
-                        legend: {
-                            orientation: 'h',
-                            y: -0.2,
-                            xanchor: 'center',
-                            x: 0.5
-                        },
-                        xaxis: {
-                            title: '',
-                            tickmode: 'linear',
-                            automargin: true
-                        },
-                        yaxis: {
-                            title: '',
-                            automargin: true
-                        },
-                        margin: {
-                            t: 50,
-                            b: 100
-                        }
-                    };
-    
-                    Plotly.newPlot('monthlyChart', traces, layout);
-                }
-            })
-            .catch(error => {
-                console.error('Error updating monthly chart:', error);
-                document.getElementById('monthlyChart').innerHTML = '<p>Error loading chart data</p>';
             });
-    }
-
-    function loadStationComparison() {
-        const selectedStations = $('#compareStations').val();
-        const selectedParams = $('#compareParams').val();
-        const year = document.getElementById('comparisonYear')?.value || null;
-
-        if (!selectedStations.length || !selectedParams.length) {
-            document.getElementById('comparisonCharts').innerHTML = '<p>Please select stations and parameters</p>';
-            return;
-        }
-
-        document.getElementById('comparisonCharts').innerHTML = '<p>Loading comparison...</p>';
-        fetch('/station-comparison', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stations: selectedStations, params: selectedParams, year: year })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const chartsDiv = document.getElementById('comparisonCharts');
-            chartsDiv.innerHTML = '';
-
-            selectedParams.forEach(param => {
-                const traces = selectedStations.map((station, index) => ({
-                    x: data.dates[station],
-                    y: data.values[station][param],
-                    type: 'scatter',
-                    mode: 'lines',
-                    name: station,
-                    line: { color: colorPalette[index % colorPalette.length] }
-                }));
-
-                const div = document.createElement('div');
-                div.id = `chart-${param}`;
-                chartsDiv.appendChild(div);
-
-                Plotly.newPlot(`chart-${param}`, traces, {
-                    title: `${param} Comparison Across Stations`,
-                    xaxis: { title: '' },
-                    yaxis: { title: '' },
-                    height: 500
-                });
-            });
-
-            updateSummaryTable(data);
-        })
-        .catch(error => {
-            console.error('Error loading comparison:', error);
-            document.getElementById('comparisonCharts').innerHTML = '<p>Error loading comparison</p>';
-        });
-    }
-
-    function updateSummaryTable(data) {
-        const selectedStations = $('#compareStations').val();
-        const statsTable = document.getElementById('summaryStats');
-        
-        let tableHtml = `<table class="summary-table"><thead><tr><th>Station</th><th>GHI Mean</th><th>GHI Min</th><th>GHI Max</th><th>GHI Std</th></tr></thead><tbody>`;
-
-        selectedStations.forEach(station => {
-            tableHtml += `<tr><td>${station}</td>`;
-            ['mean', 'min', 'max', 'std'].forEach(stat => {
-                const key = `GHI (Wh/m2)_${stat}`;
-                const value = data.summary_stats[key]?.[station];
-                tableHtml += `<td>${value !== undefined && value !== null ? value.toFixed(2) : 'N/A'}</td>`;
-            });
-            tableHtml += '</tr>';
         });
 
-        tableHtml += '</tbody></table>';
-        statsTable.innerHTML = tableHtml;
-    }
-
-    fetch('/data-analysis')
-        .then(response => response.json())
-        .then(data => {
-            const paramSelect = $('#compareParams');
-            
-            const params = Object.keys(data.summary_stats)
-                .filter(key => key.endsWith('_mean'))
-                .map(key => key.replace('_mean', ''));
-            
-            params.forEach((param, index) => {
-                const isDefault = index === 0;
-                const option = new Option(param, param, isDefault, isDefault);
-                paramSelect.append(option);
-            });
-            
-            paramSelect.trigger('change');
-
-            const ranges = {};
-            Object.keys(data.summary_stats).forEach(key => {
-                const param = key.replace(/_(mean|min|max|std)$/, '');
-                if (!ranges[param]) ranges[param] = {};
-                if (key.endsWith('_min')) ranges[param].min = Math.min(...Object.values(data.summary_stats[key]));
-                if (key.endsWith('_max')) ranges[param].max = Math.max(...Object.values(data.summary_stats[key]));
-                if (key.endsWith('_mean')) ranges[param].mean = Object.values(data.summary_stats[key]).reduce((a, b) => a + b, 0) / Object.keys(data.summary_stats[key]).length;
-                if (key.endsWith('_std')) ranges[param].std = Object.values(data.summary_stats[key]).reduce((a, b) => a + b, 0) / Object.keys(data.summary_stats[key]).length;
-            });
-
-            document.getElementById('tempRange').textContent = `Range: ${ranges['Air Temperature (C°)']?.min.toFixed(2)} - ${ranges['Air Temperature (C°)']?.max.toFixed(2)} °C`;
-            document.getElementById('tempUncertaintyRange').textContent = `Range: ${ranges['Air Temperature Uncertainty (C°)']?.min.toFixed(2)} - ${ranges['Air Temperature Uncertainty (C°)']?.max.toFixed(2)} °C`;
-            document.getElementById('windDirRange').textContent = `Range: ${ranges['Wind Direction at 3m (°N)']?.min.toFixed(2)} - ${ranges['Wind Direction at 3m (°N)']?.max.toFixed(2)} °N`;
-            document.getElementById('windDirUncertaintyRange').textContent = `Range: ${ranges['Wind Direction at 3m Uncertainty (°N)']?.min.toFixed(2)} - ${ranges['Wind Direction at 3m Uncertainty (°N)']?.max.toFixed(2)} °N`;
-            document.getElementById('windRange').textContent = `Range: ${ranges['Wind Speed at 3m (m/s)']?.min.toFixed(2)} - ${ranges['Wind Speed at 3m (m/s)']?.max.toFixed(2)} m/s`;
-            document.getElementById('windSpeedUncertaintyRange').textContent = `Range: ${ranges['Wind Speed at 3m Uncertainty (m/s)']?.min.toFixed(2)} - ${ranges['Wind Speed at 3m Uncertainty (m/s)']?.max.toFixed(2)} m/s`;
-            document.getElementById('windSpeedStdDevRange').textContent = `Range: ${ranges['Wind Speed at 3m (std dev) (m/s)']?.min.toFixed(2)} - ${ranges['Wind Speed at 3m (std dev) (m/s)']?.max.toFixed(2)} m/s`;
-            document.getElementById('dhiRange').textContent = `Range: ${ranges['DHI (Wh/m2)']?.min.toFixed(2)} - ${ranges['DHI (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('dhiUncertaintyRange').textContent = `Range: ${ranges['DHI Uncertainty (Wh/m2)']?.min.toFixed(2)} - ${ranges['DHI Uncertainty (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('dhiStdDevRange').textContent = `Range: ${ranges['Standard Deviation DHI (Wh/m2)']?.min.toFixed(2)} - ${ranges['Standard Deviation DHI (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('dniRange').textContent = `Range: ${ranges['DNI (Wh/m2)']?.min.toFixed(2)} - ${ranges['DNI (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('dniUncertaintyRange').textContent = `Range: ${ranges['DNI Uncertainty (Wh/m2)']?.min.toFixed(2)} - ${ranges['DNI Uncertainty (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('dniStdDevRange').textContent = `Range: ${ranges['Standard Deviation DNI (Wh/m2)']?.min.toFixed(2)} - ${ranges['Standard Deviation DNI (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('ghiUncertaintyRange').textContent = `Range: ${ranges['GHI Uncertainty (Wh/m2)']?.min.toFixed(2)} - ${ranges['GHI Uncertainty (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('ghiStdDevRange').textContent = `Range: ${ranges['Standard Deviation GHI (Wh/m2)']?.min.toFixed(2)} - ${ranges['Standard Deviation GHI (Wh/m2)']?.max.toFixed(2)} Wh/m²`;
-            document.getElementById('peakWindSpeedRange').textContent = `Range: ${ranges['Peak Wind Speed at 3m (m/s)']?.min.toFixed(2)} - ${ranges['Peak Wind Speed at 3m (m/s)']?.max.toFixed(2)} m/s`;
-            document.getElementById('peakWindSpeedUncertaintyRange').textContent = `Range: ${ranges['Peak Wind Speed at 3m Uncertainty (m/s)']?.min.toFixed(2)} - ${ranges['Peak Wind Speed at 3m Uncertainty (m/s)']?.max.toFixed(2)} m/s`;
-            document.getElementById('humidityRange').textContent = `Range: ${ranges['Relative Humidity (%)']?.min.toFixed(2)} - ${ranges['Relative Humidity (%)']?.max.toFixed(2)} %`;
-            document.getElementById('humidityUncertaintyRange').textContent = `Range: ${ranges['Relative Humidity Uncertainty (%)']?.min.toFixed(2)} - ${ranges['Relative Humidity Uncertainty (%)']?.max.toFixed(2)} %`;
-            document.getElementById('pressureRange').textContent = `Range: ${ranges['Barometric Pressure (mB (hPa equiv))']?.min.toFixed(2)} - ${ranges['Barometric Pressure (mB (hPa equiv))']?.max.toFixed(2)} hPa`;
-            document.getElementById('pressureUncertaintyRange').textContent = `Range: ${ranges['Barometric Pressure Uncertainty (mB (hPa equiv))']?.min.toFixed(2)} - ${ranges['Barometric Pressure Uncertainty (mB (hPa equiv))']?.max.toFixed(2)} hPa`;
-        })
-        .catch(error => console.error('Error fetching data analysis:', error));
-
-    document.getElementById('predictionForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const predictionResultDiv = document.getElementById('predictionResult');
-
-        const inputData = {
-            'Air Temperature (C°)': parseFloat(document.getElementById('airTemp').value),
-            'Air Temperature Uncertainty (C°)': parseFloat(document.getElementById('airTempUncertainty').value),
-            'Wind Direction at 3m (°N)': parseFloat(document.getElementById('windDir').value),
-            'Wind Direction at 3m Uncertainty (°N)': parseFloat(document.getElementById('windDirUncertainty').value),
-            'Wind Speed at 3m (m/s)': parseFloat(document.getElementById('windSpeed').value),
-            'Wind Speed at 3m Uncertainty (m/s)': parseFloat(document.getElementById('windSpeedUncertainty').value),
-            'Wind Speed at 3m (std dev) (m/s)': parseFloat(document.getElementById('windSpeedStdDev').value),
-            'DHI (Wh/m2)': parseFloat(document.getElementById('dhi').value),
-            'DHI Uncertainty (Wh/m2)': parseFloat(document.getElementById('dhiUncertainty').value),
-            'Standard Deviation DHI (Wh/m2)': parseFloat(document.getElementById('dhiStdDev').value),
-            'DNI (Wh/m2)': parseFloat(document.getElementById('dni').value),
-            'DNI Uncertainty (Wh/m2)': parseFloat(document.getElementById('dniUncertainty').value),
-            'Standard Deviation DNI (Wh/m2)': parseFloat(document.getElementById('dniStdDev').value),
-            'GHI Uncertainty (Wh/m2)': parseFloat(document.getElementById('ghiUncertainty').value),
-            'Standard Deviation GHI (Wh/m2)': parseFloat(document.getElementById('ghiStdDev').value),
-            'Peak Wind Speed at 3m (m/s)': parseFloat(document.getElementById('peakWindSpeed').value),
-            'Peak Wind Speed at 3m Uncertainty (m/s)': parseFloat(document.getElementById('peakWindSpeedUncertainty').value),
-            'Relative Humidity (%)': parseFloat(document.getElementById('humidity').value),
-            'Relative Humidity Uncertainty (%)': parseFloat(document.getElementById('humidityUncertainty').value),
-            'Barometric Pressure (mB (hPa equiv))': parseFloat(document.getElementById('pressure').value),
-            'Barometric Pressure Uncertainty (mB (hPa equiv))': parseFloat(document.getElementById('pressureUncertainty').value)
+        const layout = {
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: 'transparent',
+            font: { family: 'Inter, sans-serif', color: isDark ? '#94a3b8' : '#475569', size: 11 },
+            margin: { t: 30, r: 20, l: 50, b: 40 },
+            legend: { orientation: 'h', y: 1.15, x: 0 },
+            xaxis: { gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+            yaxis: { gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
         };
 
-        const selectedModel = document.getElementById('modelSelect') ? document.getElementById('modelSelect').value : 'linear_regression';
-        inputData['model_type'] = selectedModel;
+        Plotly.newPlot('comparisonChart', traces, layout, { responsive: true, displayModeBar: false });
 
-        // Validate inputs
-        for (const [key, value] of Object.entries(inputData)) {
-            if (key === 'model_type') continue;
-            if (isNaN(value) || value === null || value === undefined) {
-                predictionResultDiv.innerHTML = `
-                    <div class="alert alert-danger">Invalid input for ${key}. Please enter a valid number.</div>
-                `;
-                return;
-            }
-        }
-
-        predictionResultDiv.innerHTML = `<p>Predicting with <strong>${selectedModel.toUpperCase()}</strong>...</p>`;
-        fetch('/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(inputData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.prediction !== undefined) {
-                const prediction = parseFloat(data.prediction).toFixed(2);
-                let alertClass;
-                if (prediction > ghiThresholds.high) {
-                    alertClass = 'alert-success';
-                } else if (prediction < ghiThresholds.low) {
-                    alertClass = 'alert-danger';
-                } else {
-                    alertClass = 'alert-warning';
-                }
-                const modelLabel = data.model_used ? data.model_used.toUpperCase() : selectedModel.toUpperCase();
-                predictionResultDiv.innerHTML = `
-                    <div class="alert ${alertClass} shadow-sm">
-                        <h5 class="mb-1">Predicted GHI: <strong>${prediction} Wh/m²</strong></h5>
-                        <small class="text-muted">Model Architecture: <strong>${modelLabel}</strong></small>
-                    </div>
-                `;
-            } else {
-                throw new Error(data.error || 'Unknown prediction error');
-            }
-        })
-        .catch(error => {
-            console.error('Error predicting GHI:', error);
-            predictionResultDiv.innerHTML = `
-                <div class="alert alert-danger">Prediction Error: ${error.message}</div>
-            `;
-        });
-    });
-
-    // Add event listener for Load Average Values button
-    document.getElementById('loadAveragesBtn').addEventListener('click', function() {
-        fetch('/get-average-values')
-            .then(response => response.json())
-            .then(data => {
-                // Map feature names to input field IDs
-                const fieldMapping = {
-                    'Air Temperature (C°)': 'airTemp',
-                    'Air Temperature Uncertainty (C°)': 'airTempUncertainty',
-                    'Wind Direction at 3m (°N)': 'windDir',
-                    'Wind Direction at 3m Uncertainty (°N)': 'windDirUncertainty',
-                    'Wind Speed at 3m (m/s)': 'windSpeed',
-                    'Wind Speed at 3m Uncertainty (m/s)': 'windSpeedUncertainty',
-                    'Wind Speed at 3m (std dev) (m/s)': 'windSpeedStdDev',
-                    'DHI (Wh/m2)': 'dhi',
-                    'DHI Uncertainty (Wh/m2)': 'dhiUncertainty',
-                    'Standard Deviation DHI (Wh/m2)': 'dhiStdDev',
-                    'DNI (Wh/m2)': 'dni',
-                    'DNI Uncertainty (Wh/m2)': 'dniUncertainty',
-                    'Standard Deviation DNI (Wh/m2)': 'dniStdDev',
-                    'GHI Uncertainty (Wh/m2)': 'ghiUncertainty',
-                    'Standard Deviation GHI (Wh/m2)': 'ghiStdDev',
-                    'Peak Wind Speed at 3m (m/s)': 'peakWindSpeed',
-                    'Peak Wind Speed at 3m Uncertainty (m/s)': 'peakWindSpeedUncertainty',
-                    'Relative Humidity (%)': 'humidity',
-                    'Relative Humidity Uncertainty (%)': 'humidityUncertainty',
-                    'Barometric Pressure (mB (hPa equiv))': 'pressure',
-                    'Barometric Pressure Uncertainty (mB (hPa equiv))': 'pressureUncertainty'
-                };
-
-                // Fill each input field with the corresponding average value
-                Object.keys(data).forEach(key => {
-                    const inputId = fieldMapping[key];
-                    const input = document.getElementById(inputId);
-                    if (input && data[key] !== null) {
-                        input.value = data[key].toFixed(2);
-                    }
+        // Populate Summary Table
+        const tbody = document.querySelector('#comparisonTable tbody');
+        tbody.innerHTML = '';
+        if (data.summary_stats) {
+            params.forEach(p => {
+                ['mean', 'min', 'max', 'std'].forEach(stat => {
+                    const row = document.createElement('tr');
+                    const statKey = `${p}_${stat}`;
+                    let stationVals = [];
+                    stations.forEach(st => {
+                        const val = data.summary_stats[statKey] ? data.summary_stats[statKey][st] : null;
+                        stationVals.push(`<strong>${st}:</strong> ${val !== null ? val : 'N/A'}`);
+                    });
+                    row.innerHTML = `
+                        <td style="font-weight:600; color:var(--text-primary);">${p}</td>
+                        <td><span class="badge badge-model-type">${stat.toUpperCase()}</span></td>
+                        <td style="font-size:0.82rem;">${stationVals.join(' | ')}</td>
+                    `;
+                    tbody.appendChild(row);
                 });
-            })
-            .catch(error => {
-                console.error('Error loading average values:', error);
-                alert('Failed to load average values: ' + error.message);
             });
+        }
+    })
+    .catch(err => console.error("Error in station comparison:", err));
+}
+
+/* 1-Click City Presets */
+function applyPreset(cityName) {
+    const preset = CITY_PRESETS[cityName];
+    if (!preset) return;
+
+    // Populate all input fields matching preset keys
+    const form = document.getElementById('predictionForm');
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+        const name = input.name;
+        if (preset[name] !== undefined) {
+            input.value = preset[name];
+        }
     });
 
-    $('#parameterSelect').on('change', () => {
-        const station = document.getElementById('stationSelect').value;
-        updateMonthlyChart(station);
+    // Auto-calculate prediction upon applying preset
+    handlePredictionSubmit(new Event('submit'));
+}
+
+function resetFormToAverages() {
+    fetch('/get-average-values')
+        .then(res => res.json())
+        .then(avg => {
+            const form = document.getElementById('predictionForm');
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                if (avg[input.name] !== undefined && avg[input.name] !== null) {
+                    input.value = avg[input.name].toFixed(2);
+                }
+            });
+            handlePredictionSubmit(new Event('submit'));
+        })
+        .catch(err => console.error("Error fetching averages:", err));
+}
+
+/* Real-time GHI Prediction */
+function handlePredictionSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const form = document.getElementById('predictionForm');
+    const formData = new FormData(form);
+    const payload = {};
+    formData.forEach((value, key) => {
+        payload[key] = parseFloat(value) || 0.0;
     });
 
-    $('#compareStations, #compareParams').on('change', loadStationComparison);
+    const modelType = document.getElementById('predictModelType').value;
+    payload['model_type'] = modelType;
 
-    document.getElementById('stationSelect').addEventListener('change', (e) => loadStationDetails(e.target.value));
-    document.getElementById('mapViewYear').addEventListener('change', () => {
-        const station = document.getElementById('stationSelect').value;
-        updateMonthlyChart(station);
+    const predValEl = document.getElementById('predValue');
+    const tierEl = document.getElementById('predTier');
+    const yieldEl = document.getElementById('estPvYield');
+    const activeModelTag = document.getElementById('activeModelTag');
+
+    predValEl.textContent = '...';
+    activeModelTag.textContent = modelType.toUpperCase();
+
+    fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.prediction !== undefined) {
+            const ghi = data.prediction;
+            animateValue(predValEl, 0, ghi, 600);
+
+            // Tier Calculation
+            tierEl.className = 'tier-indicator';
+            if (ghi >= 6800) {
+                tierEl.textContent = 'High Solar Irradiance Zone';
+                tierEl.classList.add('tier-high');
+            } else if (ghi >= 4500) {
+                tierEl.textContent = 'Moderate Solar Irradiance Zone';
+                tierEl.classList.add('tier-mid');
+            } else {
+                tierEl.textContent = 'Low Solar Irradiance Zone';
+                tierEl.classList.add('tier-low');
+            }
+
+            // Estimate PV Yield (Standard 1 kWp system = GHI / 1000 * 0.80 PR)
+            const pvYield = ((ghi / 1000) * 0.80).toFixed(2);
+            yieldEl.textContent = `${pvYield} kWh / day`;
+
+            // Render Gauge Indicator
+            renderGaugePlot(ghi);
+        } else if (data.error) {
+            predValEl.textContent = 'Error';
+            alert(`Prediction Error: ${data.error}`);
+        }
+    })
+    .catch(err => {
+        console.error("Prediction error:", err);
+        predValEl.textContent = 'Error';
     });
-    document.getElementById('comparisonYear').addEventListener('change', loadStationComparison);
+}
 
-    populateStationSelects();
-    loadMapData();
-});
+function animateValue(obj, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = (progress * (end - start) + start).toFixed(1);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+
+function renderGaugePlot(value) {
+    const isDark = currentTheme === 'dark';
+    const data = [{
+        type: "indicator",
+        mode: "gauge+number",
+        value: value,
+        gauge: {
+            axis: { range: [2000, 8500], tickwidth: 1, tickcolor: isDark ? "#64748b" : "#94a3b8" },
+            bar: { color: "#10b981", thickness: 0.25 },
+            bgcolor: "transparent",
+            borderwidth: 1,
+            bordercolor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+            steps: [
+                { range: [2000, 4500], color: "rgba(244, 63, 94, 0.2)" },
+                { range: [4500, 6800], color: "rgba(245, 158, 11, 0.2)" },
+                { range: [6800, 8500], color: "rgba(16, 185, 129, 0.2)" }
+            ]
+        }
+    }];
+
+    const layout = {
+        width: 280,
+        height: 180,
+        margin: { t: 15, r: 25, l: 25, b: 10 },
+        paper_bgcolor: 'transparent',
+        font: { family: 'Outfit, sans-serif', color: isDark ? '#f8fafc' : '#0f172a' }
+    };
+
+    Plotly.newPlot('gaugePlot', data, layout, { responsive: true, displayModeBar: false });
+}
+
+/* Model Leaderboard Rendering & Filtering */
+function renderLeaderboard(filterCategory = 'all') {
+    const tbody = document.getElementById('leaderboardBody');
+    tbody.innerHTML = '';
+
+    const filtered = BENCHMARK_MODELS.filter(m => {
+        if (filterCategory === 'all') return true;
+        return m.category.toLowerCase().includes(filterCategory.toLowerCase());
+    });
+
+    filtered.forEach(m => {
+        const tr = document.createElement('tr');
+        if (m.champion) tr.style.background = 'rgba(16, 185, 129, 0.08)';
+
+        tr.innerHTML = `
+            <td><strong style="color:${m.champion ? 'var(--accent-solar)' : 'var(--text-primary)'};">${m.rank}</strong></td>
+            <td>
+                <strong>${m.name}</strong>
+                ${m.champion ? '<span class="badge-champion ms-2"><i class="fa-solid fa-crown"></i> Champion</span>' : ''}
+            </td>
+            <td><span class="badge-model-type">${m.category}</span></td>
+            <td>${m.mae}</td>
+            <td><strong style="color:${m.champion ? 'var(--accent-emerald)' : 'var(--text-primary)'};">${m.rmse_str}</strong></td>
+            <td><strong>${m.r2}</strong></td>
+            <td style="color:var(--text-muted); font-size:0.82rem;">${m.time}</td>
+            <td><span class="badge" style="background:${m.champion ? 'var(--accent-emerald)' : 'rgba(255,255,255,0.08)'}; color:${m.champion ? '#fff' : 'var(--text-secondary)'}; font-size:0.75rem;">${m.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Render Comparison Bar Chart
+    renderLeaderboardChart(filtered);
+}
+
+function filterLeaderboard(cat) {
+    const buttons = document.querySelectorAll('#tab-leaderboard .btn-group button');
+    buttons.forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderLeaderboard(cat);
+}
+
+function renderLeaderboardChart(models) {
+    const isDark = currentTheme === 'dark';
+    const names = models.map(m => m.name.split('(')[0].trim());
+    const rmses = models.map(m => m.rmse);
+    const colors = models.map(m => m.champion ? '#10b981' : (m.category === 'Deep Learning' ? '#06b6d4' : (m.category === 'Ensemble' ? '#f59e0b' : '#6366f1')));
+
+    const trace = {
+        x: names,
+        y: rmses,
+        type: 'bar',
+        marker: { color: colors },
+        text: rmses.map(r => `${r.toFixed(1)}`),
+        textposition: 'auto'
+    };
+
+    const layout = {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { family: 'Inter, sans-serif', color: isDark ? '#94a3b8' : '#475569', size: 10 },
+        margin: { t: 20, r: 15, l: 40, b: 60 },
+        xaxis: { tickangle: -25, gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+        yaxis: { title: 'RMSE (Wh/m²)', gridcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
+    };
+
+    Plotly.newPlot('leaderboardChart', [trace], layout, { responsive: true, displayModeBar: false });
+}
