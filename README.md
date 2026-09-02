@@ -84,17 +84,25 @@ All 11 models evaluated under the **exact same 10-fold CV partitions, same rando
 
 > **Statistical Significance & Confidence Analysis:** Paired two-tailed Student's t-tests ($df = 9$) across all 10 cross-validation folds confirm that the performance superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$. In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[101.86, 119.08]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[162.31, 182.70]$), demonstrating decisive outperformance. Full t-statistics, p-values, and CIs are exported in [`results/statistical_significance.csv`](results/statistical_significance.csv).
 
-### 🗺️ 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation
+### 🗺️ Controlled Spatial Generalization: 43-Fold Leave-One-Station-Out (LOSO) CV
 
-Evaluating spatial generalization of the FT-Transformer across all 43 weather stations:
+To rigorously evaluate real-world generalization to completely **unseen geographical regions and distinct microclimates**, every model is evaluated under strict 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation. In each fold, all observations from one complete weather station are held out for testing while training on the remaining 42 stations:
 
-| Metric | Value |
-|---|:---:|
-| **MAE** | 101.67 ± 30.16 Wh/m² |
-| **RMSE** | 132.78 ± 52.61 Wh/m² |
-| **R² Score** | 0.9784 ± 0.0381 |
+| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | Inference Time (ms) |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| 🥇 | **FT-Transformer** | **Deep Learning** | **90.66 ± 33.82** | **120.65 ± 54.64** | **[103.83, 137.47]** | **0.9803 ± 0.0352** | **0.13** |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | 0.01 |
+| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | 0.00 |
+| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | 0.04 |
+| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | 0.04 |
+| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | 0.04 |
+| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | 1.16 |
+| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | 0.21 |
+| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | 0.13 |
+| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | 0.01 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | 0.07 |
 
-This demonstrates strong generalization to **previously unseen geographic locations** across Saudi Arabia.
+> **Key Finding for Research Discussion:** FT-Transformer retains dominant predictive accuracy ($R^2 = 0.9803, \text{RMSE} = 120.65\text{ Wh/m}^2$) even when deployed to completely unfamiliar stations with distinct topography and albedo, outperforming the next best model (ANN) by **61.01 Wh/m²** (a 33.6% error reduction) in RMSE. Furthermore, FT-Transformer's 95% Confidence Interval ($[103.83, 137.47]\text{ Wh/m}^2$) has zero overlap with ANN ($[164.05, 199.27]\text{ Wh/m}^2$). Granular per-station and per-fold metrics for all models are saved in `results/{model}_loso_*.csv`.
 
 ---
 

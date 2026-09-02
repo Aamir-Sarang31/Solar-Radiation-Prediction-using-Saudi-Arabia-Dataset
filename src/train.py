@@ -558,6 +558,12 @@ def main():
 
     results_table = []
     for m in models_to_train:
+        model_config = args.config
+        if model_config is None:
+            auto_cfg = os.path.join("configs", f"{m}_best.json")
+            if os.path.exists(auto_cfg):
+                model_config = auto_cfg
+
         res = run_cross_validation(
             model_name=m,
             cv_strategy=args.cv,
@@ -568,7 +574,7 @@ def main():
             results_dir=args.results_dir,
             seed=args.seed,
             device=args.device,
-            config_path=args.config
+            config_path=model_config
         )
         results_table.append({
             "Model": m.upper(),
