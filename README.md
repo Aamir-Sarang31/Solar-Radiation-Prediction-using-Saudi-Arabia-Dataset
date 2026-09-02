@@ -88,21 +88,21 @@ All 11 models evaluated under the **exact same 10-fold CV partitions, same rando
 
 To rigorously evaluate real-world generalization to completely **unseen geographical regions and distinct microclimates**, every model is evaluated under strict 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation. In each fold, all observations from one complete weather station are held out for testing while training on the remaining 42 stations:
 
-| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | Inference Time (ms) |
-| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| 🥇 | **FT-Transformer** | **Deep Learning** | **90.66 ± 33.82** | **120.65 ± 54.64** | **[103.83, 137.47]** | **0.9803 ± 0.0352** | **0.13** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | 0.01 |
-| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | 0.00 |
-| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | 0.04 |
-| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | 0.04 |
-| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | 0.04 |
-| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | 1.16 |
-| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | 0.21 |
-| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | 0.13 |
-| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | 0.01 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | 0.07 |
+| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | $p$-value (vs FT-Trans) | Inference Time (ms) |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| 🥇 | **FT-Transformer** | **Deep Learning** | **90.66 ± 33.82** | **120.65 ± 54.64** | **[103.83, 137.47]** | **0.9803 ± 0.0352** | **Baseline Champion** | **0.13** |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | $p < 0.001\ (***)$ | 0.01 |
+| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | $p < 0.001\ (***)$ | 0.005 |
+| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | $p < 0.001\ (***)$ | 0.04 |
+| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | $p < 0.001\ (***)$ | 0.04 |
+| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | $p < 0.001\ (***)$ | 0.04 |
+| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | $p < 0.001\ (***)$ | 1.16 |
+| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | $p < 0.001\ (***)$ | 0.21 |
+| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | $p < 0.001\ (***)$ | 0.13 |
+| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | $p < 0.001\ (***)$ | 0.01 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | $p < 0.001\ (***)$ | 0.07 |
 
-> **Key Finding for Research Discussion:** FT-Transformer retains dominant predictive accuracy ($R^2 = 0.9803, \text{RMSE} = 120.65\text{ Wh/m}^2$) even when deployed to completely unfamiliar stations with distinct topography and albedo, outperforming the next best model (ANN) by **61.01 Wh/m²** (a 33.6% error reduction) in RMSE. Furthermore, FT-Transformer's 95% Confidence Interval ($[103.83, 137.47]\text{ Wh/m}^2$) has zero overlap with ANN ($[164.05, 199.27]\text{ Wh/m}^2$). Granular per-station and per-fold metrics for all models are saved in `results/{model}_loso_*.csv`.
+> **Statistical Significance & Spatial Generalization Analysis:** Paired two-tailed Student's t-tests ($df = 42$) across all 43 held-out stations confirm that the spatial generalization superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$ (e.g. vs ANN: $t = 7.49, p = 2.91 \times 10^{-9}$; vs LR: $t = 6.95, p = 1.70 \times 10^{-8}$; vs HGB: $t = 6.94, p = 1.76 \times 10^{-8}$; vs SVR: $t = 4.79, p = 2.09 \times 10^{-5}$). In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[103.83, 137.47]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[164.05, 199.27]$), demonstrating decisive spatial outperformance with a **61.01 Wh/m²** (33.6%) error reduction. Full per-station data and t-test statistics are exported in [`results/loso_statistical_significance.csv`](results/loso_statistical_significance.csv).
 
 ---
 
@@ -265,13 +265,14 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │
 ├── results/                       # Granular, publication-ready research CSV exports
 │   ├── benchmark_summary.csv      # Cross-model master comparison summary (with 95% CIs)
-│   ├── statistical_significance.csv # Formal hypothesis testing (t-stats, p-values, 95% CIs)
+│   ├── statistical_significance.csv # 10-Fold CV hypothesis testing (t-stats, p-values, 95% CIs)
+│   ├── loso_statistical_significance.csv # 43-Fold LOSO hypothesis testing (t-stats, p-values, 95% CIs)
 │   ├── paper_baselines.csv        # Published 8-model baseline results
 │   ├── *_samples.csv              # Per-observation out-of-fold predictions & residuals
 │   ├── *_folds.csv                # Per-fold performance metrics (MAE, RMSE, R², MBE)
 │   └── *_stations.csv             # Station-by-station spatial metrics (all 43 stations)
 │
-├── tests/                         # Test suite (46 tests)
+├── tests/                         # Test suite (47 tests)
 │   ├── __init__.py
 │   ├── test_api.py                # Flask API endpoint tests
 │   ├── test_models.py             # Forward/backward pass tests for all DL models
@@ -439,7 +440,7 @@ Triggers on every push and pull request to `main`/`master`:
 1. **Checkout** → Set up Python 3.11
 2. **Install Dependencies** → PyTorch (CPU) + `requirements-dev.txt` (MLflow, DVC, scipy, pytest, flake8)
 3. **Code Quality** → Flake8 linting (syntax errors, undefined names)
-4. **Test Suite** → `pytest tests/ -v` (46 tests)
+4. **Test Suite** → `pytest tests/ -v` (47 tests)
 5. **Smoke Training** → 3-epoch FT-Transformer training with MLflow tracking
 6. **Promotion Gate** → MLflow Registry quality threshold verification (`--dry-run` on PRs, full export on `main`)
 
@@ -454,7 +455,7 @@ Triggers automatically on push to `main`/`master`:
 
 ## 🧪 Testing
 
-The project includes **46 automated tests** across 6 test modules:
+The project includes **47 automated tests** across 6 test modules:
 
 | Module | Tests | Coverage |
 |---|:---:|---|
@@ -462,7 +463,7 @@ The project includes **46 automated tests** across 6 test modules:
 | `test_models.py` | 7 | Forward pass, backward pass gradients, single-sample inference for all DL models |
 | `test_preprocessing.py` | 5 | Feature list completeness, dataset loading, 10-Fold/LOSO splits, scaling |
 | `test_registry_gate.py` | 3 | Promotion thresholds, acceptance criteria, MLflow retrieval |
-| `test_results_export.py` | 5 | Research CSV results export, schema validation, 95% CIs, statistical significance (p-values) |
+| `test_results_export.py` | 6 | Research CSV results export, schema validation, 95% CIs, 10-Fold & LOSO significance (p-values) |
 | `test_tuning.py` | 19 | RandomizedSearchCV distributions, sampling (8 models), device detection, classical/DL smoke tuning |
 
 ```bash

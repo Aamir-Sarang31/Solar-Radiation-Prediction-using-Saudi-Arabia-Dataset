@@ -149,3 +149,17 @@ def test_export_statistical_significance_csv():
         for col in ["Model", "Category", "MAE", "95% CI (MAE)", "RMSE", "95% CI (RMSE)", "R2", "95% CI (R2)", "p_value_vs_champion", "Significance", "Inference_ms"]:
             assert col in df.columns
 
+
+def test_export_loso_statistical_significance_csv():
+    """Verify export of 43-Fold LOSO statistical significance and 95% confidence intervals."""
+    from src.export_results import export_loso_statistical_significance_csv
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        out_path = export_loso_statistical_significance_csv(results_dir=tmp_dir)
+        assert os.path.exists(out_path)
+
+        df = pd.read_csv(out_path)
+        assert len(df) == 11
+        for col in ["Model", "Category", "MAE", "95% CI (MAE)", "RMSE", "95% CI (RMSE)", "R2", "95% CI (R2)", "p_value_vs_champion", "Significance", "Inference_ms"]:
+            assert col in df.columns
+
