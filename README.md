@@ -71,16 +71,16 @@ All 11 models evaluated under the **exact same 10-fold CV partitions, same rando
 | Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs FT-Trans) | Inference (ms) |
 | :---: | :--- | :--- | :--- | :---: | :--- | :---: | :--- | :---: | :---: | :---: |
 | 🥇 | **FT-Transformer** | **Deep Learning** | **81.10 ± 7.21** | **[75.94, 86.26]** | **110.47 ± 12.04** | **[101.86, 119.08]** | **0.9919 ± 0.0023** | **[0.9902, 0.9935]** | **Baseline Champion** | **0.68** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | [122.31, 135.95] | 172.50 ± 14.25 | [162.31, 182.70] | 0.9807 ± 0.0037 | [0.9781, 0.9833] | $2.00 \times 10^{-7}\ (***)$ | 0.18 |
-| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | [120.53, 138.21] | 178.39 ± 22.46 | [162.32, 194.46] | 0.9792 ± 0.0055 | [0.9753, 0.9831] | $3.64 \times 10^{-6}\ (***)$ | 0.79 |
-| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | [106.99, 121.23] | 188.36 ± 35.15 | [163.22, 213.51] | 0.9765 ± 0.0080 | [0.9708, 0.9822] | $1.23 \times 10^{-4}\ (***)$ | 0.19 |
-| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | [127.38, 141.18] | 194.14 ± 42.34 | [163.86, 224.43] | 0.9746 ± 0.0122 | [0.9659, 0.9833] | $1.59 \times 10^{-4}\ (***)$ | 0.07 |
-| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | [147.71, 163.59] | 215.21 ± 20.70 | [200.40, 230.02] | 0.9697 ± 0.0067 | [0.9649, 0.9745] | $1.06 \times 10^{-7}\ (***)$ | 0.33 |
-| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | [150.82, 176.38] | 230.28 ± 26.87 | [211.06, 249.51] | 0.9653 ± 0.0090 | [0.9589, 0.9717] | $1.49 \times 10^{-7}\ (***)$ | 30.86 |
-| 8 | 1D CNN | **Deep Learning** | 214.28 ± 19.76 | [200.14, 228.42] | 283.96 ± 25.74 | [265.55, 302.37] | 0.9471 ± 0.0133 | [0.9376, 0.9566] | $3.03 \times 10^{-10}\ (***)$ | 1.32 |
-| 9 | Solar LSTM | **Deep Learning** | 273.68 ± 40.51 | [244.70, 302.66] | 362.18 ± 55.91 | [322.18, 402.18] | 0.9117 ± 0.0335 | [0.8877, 0.9357] | $4.41 \times 10^{-9}\ (***)$ | 0.52 |
-| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | [263.78, 296.88] | 410.28 ± 51.76 | [373.25, 447.31] | 0.8895 ± 0.0312 | [0.8672, 0.9118] | $4.33 \times 10^{-8}\ (***)$ | 0.08 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | [321.52, 354.06] | 447.20 ± 27.45 | [427.56, 466.84] | 0.8699 ± 0.0236 | [0.8530, 0.8868] | $4.07 \times 10^{-11}\ (***)$ | 2.94 |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | [122.31, 135.95] | 172.50 ± 14.25 | [162.31, 182.70] | 0.9807 ± 0.0037 | [0.9781, 0.9833] | $2.00 \times 10^{-7}\ $ | 0.18 |
+| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | [120.53, 138.21] | 178.39 ± 22.46 | [162.32, 194.46] | 0.9792 ± 0.0055 | [0.9753, 0.9831] | $3.64 \times 10^{-6}\ $ | 0.79 |
+| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | [106.99, 121.23] | 188.36 ± 35.15 | [163.22, 213.51] | 0.9765 ± 0.0080 | [0.9708, 0.9822] | $1.23 \times 10^{-4}\ $ | 0.19 |
+| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | [127.38, 141.18] | 194.14 ± 42.34 | [163.86, 224.43] | 0.9746 ± 0.0122 | [0.9659, 0.9833] | $1.59 \times 10^{-4}\ $ | 0.07 |
+| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | [147.71, 163.59] | 215.21 ± 20.70 | [200.40, 230.02] | 0.9697 ± 0.0067 | [0.9649, 0.9745] | $1.06 \times 10^{-7}\ $ | 0.33 |
+| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | [150.82, 176.38] | 230.28 ± 26.87 | [211.06, 249.51] | 0.9653 ± 0.0090 | [0.9589, 0.9717] | $1.49 \times 10^{-7}\ $ | 30.86 |
+| 8 | 1D CNN | **Deep Learning** | 214.28 ± 19.76 | [200.14, 228.42] | 283.96 ± 25.74 | [265.55, 302.37] | 0.9471 ± 0.0133 | [0.9376, 0.9566] | $3.03 \times 10^{-10}\ $ | 1.32 |
+| 9 | Solar LSTM | **Deep Learning** | 273.68 ± 40.51 | [244.70, 302.66] | 362.18 ± 55.91 | [322.18, 402.18] | 0.9117 ± 0.0335 | [0.8877, 0.9357] | $4.41 \times 10^{-9}\ $ | 0.52 |
+| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | [263.78, 296.88] | 410.28 ± 51.76 | [373.25, 447.31] | 0.8895 ± 0.0312 | [0.8672, 0.9118] | $4.33 \times 10^{-8}\ $ | 0.08 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | [321.52, 354.06] | 447.20 ± 27.45 | [427.56, 466.84] | 0.8699 ± 0.0236 | [0.8530, 0.8868] | $4.07 \times 10^{-11}\ $ | 2.94 |
 
 > **Statistical Significance & Confidence Analysis:** Paired two-tailed Student's t-tests ($df = 9$) across all 10 cross-validation folds confirm that the performance superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$ with exact $p$-values ranging from $3.64 \times 10^{-6}$ (vs HGB) down to $4.07 \times 10^{-11}$ (vs KNN). In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[101.86, 119.08]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[162.31, 182.70]$), demonstrating decisive outperformance. Full t-statistics, exact p-values, and CIs are exported in [`results/statistical_significance.csv`](results/statistical_significance.csv).
 
@@ -91,16 +91,16 @@ To rigorously evaluate real-world generalization to completely **unseen geograph
 | Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs FT-Trans) | Inference (ms) |
 | :---: | :--- | :--- | :--- | :---: | :--- | :---: | :--- | :---: | :---: | :---: |
 | 🥇 | **FT-Transformer** | **Deep Learning** | **90.66 ± 33.82** | **[80.26, 101.07]** | **120.65 ± 54.64** | **[103.83, 137.47]** | **0.9803 ± 0.0352** | **[0.9694, 0.9911]** | **Baseline Champion** | **0.13** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | [127.26, 154.11] | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | [0.9611, 0.9769] | $2.91 \times 10^{-9}\ (***)$ | 0.01 |
-| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | [128.46, 153.24] | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | [0.9388, 0.9795] | $1.70 \times 10^{-8}\ (***)$ | 0.005 |
-| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | [128.52, 157.94] | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | [0.9499, 0.9753] | $1.76 \times 10^{-8}\ (***)$ | 0.04 |
-| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | [113.93, 159.17] | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | [0.9425, 0.9726] | $2.09 \times 10^{-5}\ (***)$ | 0.04 |
-| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | [156.71, 200.15] | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | [0.9190, 0.9616] | $1.28 \times 10^{-8}\ (***)$ | 0.04 |
-| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | [165.62, 211.70] | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | [0.9102, 0.9545] | $9.46 \times 10^{-11}\ (***)$ | 1.16 |
-| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | [218.06, 264.16] | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | [0.8753, 0.9308] | $1.16 \times 10^{-18}\ (***)$ | 0.21 |
-| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | [307.55, 363.49] | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | [0.8171, 0.8820] | $9.41 \times 10^{-21}\ (***)$ | 0.13 |
-| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | [267.50, 344.96] | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | [0.7607, 0.8730] | $5.71 \times 10^{-14}\ (***)$ | 0.01 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | [338.13, 404.14] | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | [0.7302, 0.8478] | $1.02 \times 10^{-21}\ (***)$ | 0.07 |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | [127.26, 154.11] | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | [0.9611, 0.9769] | $2.91 \times 10^{-9}\ $ | 0.01 |
+| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | [128.46, 153.24] | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | [0.9388, 0.9795] | $1.70 \times 10^{-8}\ $ | 0.005 |
+| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | [128.52, 157.94] | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | [0.9499, 0.9753] | $1.76 \times 10^{-8}\ $ | 0.04 |
+| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | [113.93, 159.17] | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | [0.9425, 0.9726] | $2.09 \times 10^{-5}\ $ | 0.04 |
+| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | [156.71, 200.15] | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | [0.9190, 0.9616] | $1.28 \times 10^{-8}\ $ | 0.04 |
+| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | [165.62, 211.70] | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | [0.9102, 0.9545] | $9.46 \times 10^{-11}\ $ | 1.16 |
+| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | [218.06, 264.16] | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | [0.8753, 0.9308] | $1.16 \times 10^{-18}\ $ | 0.21 |
+| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | [307.55, 363.49] | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | [0.8171, 0.8820] | $9.41 \times 10^{-21}\ $ | 0.13 |
+| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | [267.50, 344.96] | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | [0.7607, 0.8730] | $5.71 \times 10^{-14}\ $ | 0.01 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | [338.13, 404.14] | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | [0.7302, 0.8478] | $1.02 \times 10^{-21}\ $ | 0.07 |
 
 > **Statistical Significance & Spatial Generalization Analysis:** Paired two-tailed Student's t-tests ($df = 42$) across all 43 held-out stations confirm that the spatial generalization superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$ (e.g. vs ANN: $t = 7.49, p = 2.91 \times 10^{-9}$; vs LR: $t = 6.95, p = 1.70 \times 10^{-8}$; vs HGB: $t = 6.94, p = 1.76 \times 10^{-8}$; vs SVR: $t = 4.79, p = 2.09 \times 10^{-5}$). In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[103.83, 137.47]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[164.05, 199.27]$), demonstrating decisive spatial outperformance with a **61.01 Wh/m²** (33.6%) error reduction. Full per-station data and t-test statistics are exported in [`results/loso_statistical_significance.csv`](results/loso_statistical_significance.csv).
 
