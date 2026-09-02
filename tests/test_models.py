@@ -4,7 +4,7 @@ Unit tests for PyTorch deep learning model architectures (LSTM, 1D CNN, FT-Trans
 
 import pytest
 import torch
-from src.models import build_model, SolarLSTM, SolarCNN1D, SolarTransformer
+from src.models import build_model
 
 
 @pytest.mark.parametrize("model_name", ["lstm", "cnn1d", "transformer"])

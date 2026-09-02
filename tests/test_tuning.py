@@ -1,16 +1,15 @@
 """
-Unit and integration tests for Optuna hyperparameter optimization module.
+Unit and integration tests for RandomizedSearchCV hyperparameter optimization module.
 """
 
 import os
-import json
 import pytest
-import optuna
 import torch
 import numpy as np
 import pandas as pd
 
 from src.tune import (
+    get_param_distributions,
     sample_hyperparameters,
     run_tuning,
     get_default_device
@@ -33,11 +32,17 @@ def dummy_dataset_path(tmp_path):
 
 
 @pytest.mark.parametrize("model_name", ["transformer", "lstm", "cnn1d", "svr", "hgb", "xgb", "rf", "ann"])
+def test_get_param_distributions(model_name):
+    """Verify search spaces are defined as distributions/lists without errors."""
+    dist = get_param_distributions(model_name)
+    assert isinstance(dist, dict)
+    assert len(dist) > 0
+
+
+@pytest.mark.parametrize("model_name", ["transformer", "lstm", "cnn1d", "svr", "hgb", "xgb", "rf", "ann"])
 def test_sample_hyperparameters(model_name):
-    """Verify search spaces can be sampled by Optuna without errors."""
-    study = optuna.create_study()
-    trial = study.ask()
-    params = sample_hyperparameters(trial, model_name)
+    """Verify search spaces can be sampled without errors."""
+    params = sample_hyperparameters(model_name, seed=42)
 
     assert isinstance(params, dict)
     assert len(params) > 0
@@ -59,7 +64,7 @@ def test_get_default_device():
 
 
 def test_tuning_classical_smoke(dummy_dataset_path, tmp_path):
-    """Run a fast smoke tuning test on classical SVR."""
+    """Run a fast smoke tuning test on classical SVR using RandomizedSearchCV."""
     out_dir = str(tmp_path / "configs")
     best_params, best_rmse = run_tuning(
         model_name="svr",

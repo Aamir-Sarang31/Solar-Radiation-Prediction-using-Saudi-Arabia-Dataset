@@ -17,14 +17,3 @@ plotly>=5.15.0
 
 # Deep Learning (PyTorch)
 torch>=2.0.0
-
-# MLOps & Experiment Tracking
-mlflow>=2.10.0
-sqlalchemy>=2.0.0
-
-# Testing & CI/CD
-pytest>=7.4.0
-flake8>=6.1.0
-
-# Hyperparameter Tuning
-optuna>=3.5.0

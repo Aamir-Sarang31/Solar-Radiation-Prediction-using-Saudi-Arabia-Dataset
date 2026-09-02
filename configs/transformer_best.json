@@ -1,10 +1,10 @@
 {
-    "d_model": 48,
-    "nhead": 2,
-    "num_layers": 3,
-    "dim_feedforward": 80,
-    "dropout": 0.15000000000000002,
-    "lr": 0.0019215811115723025,
-    "weight_decay": 2.8681134821030064e-05,
-    "batch_size": 32
+    "d_model": 64,
+    "nhead": 4,
+    "num_layers": 2,
+    "dim_feedforward": 48,
+    "dropout": 0.1,
+    "lr": 0.003996295893449778,
+    "weight_decay": 0.00012461313818580035,
+    "batch_size": 16
 }

@@ -10,15 +10,9 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import argparse
-import joblib
 import pandas as pd
-import numpy as np
-import torch
 import mlflow
 from mlflow.tracking import MlflowClient
-
-from src.dataset import load_dataset, FEATURE_NAMES, TARGET_NAME
-from src.models import build_model
 
 
 REGISTERED_MODEL_NAME = "SolarRadiationPredictor"
@@ -104,10 +98,22 @@ def check_promotion_gate(
         return False
 
     try:
-        # Check current production model if registered
-        latest_prod = client.get_latest_versions(REGISTERED_MODEL_NAME, stages=["Production"])
-        if latest_prod:
-            prod_version = latest_prod[0]
+        # Check current production model using MLflow 2.9+ alias with backward-compatible stages fallback
+        prod_version = None
+        try:
+            prod_version = client.get_model_version_by_alias(REGISTERED_MODEL_NAME, "champion")
+        except Exception:
+            pass
+
+        if prod_version is None:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                versions = client.get_latest_versions(REGISTERED_MODEL_NAME, stages=["Production"])
+                if versions:
+                    prod_version = versions[0]
+
+        if prod_version:
             prod_run = client.get_run(prod_version.run_id)
             prod_rmse = float(prod_run.data.metrics.get("mean_rmse", 999.0))
             print(f" Current Production Model: Version {prod_version.version} (RMSE: {prod_rmse:.2f})")
@@ -132,9 +138,31 @@ def check_promotion_gate(
             import shutil
             shutil.copy(candidate_checkpoint, target_model_path)
             shutil.copy(candidate_scaler, target_scaler_path)
-            print(f" Promoted model artifacts successfully exported to:")
+            print(" Promoted model artifacts successfully exported to:")
             print(f"   -> {target_model_path}")
             print(f"   -> {target_scaler_path}")
+
+            # Formally register model version and champion alias in MLflow Model Registry
+            if candidate_run is not None:
+                try:
+                    try:
+                        client.get_registered_model(REGISTERED_MODEL_NAME)
+                    except Exception:
+                        client.create_registered_model(REGISTERED_MODEL_NAME)
+
+                    mv = client.create_model_version(
+                        name=REGISTERED_MODEL_NAME,
+                        source=target_model_path,
+                        run_id=candidate_run.info.run_id,
+                        description=f"Promoted {candidate_model_name} (RMSE: {candidate_rmse:.2f}, R2: {candidate_r2:.4f})"
+                    )
+                    try:
+                        client.set_registered_model_alias(REGISTERED_MODEL_NAME, "champion", mv.version)
+                    except Exception:
+                        pass
+                    print(f" Registered version {mv.version} in MLflow Model Registry as @champion.")
+                except Exception as reg_err:
+                    print(f" Notice registering model in MLflow Model Registry: {reg_err}")
         else:
             print(f" Warning: Checkpoint or scaler not found at {candidate_checkpoint} / {candidate_scaler}")
     else:

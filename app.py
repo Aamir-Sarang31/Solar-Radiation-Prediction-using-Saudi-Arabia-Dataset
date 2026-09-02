@@ -1,5 +1,4 @@
 import os
-import json
 import numpy as np
 import pandas as pd
 import joblib
@@ -33,11 +32,6 @@ def load_model_and_scaler():
         scaler_path = os.path.join("model", "linear_regression_standard_scaler.pkl")
         model = joblib.load(model_path) if os.path.exists(model_path) else None
         scaler = joblib.load(scaler_path) if os.path.exists(scaler_path) else None
-
-        if model is not None:
-            model.feature_names_in_ = FEATURE_NAMES
-        if scaler is not None:
-            scaler.feature_names_in_ = FEATURE_NAMES
         return model, scaler
     except Exception as e:
         print(f"Error loading baseline model or scaler: {e}")

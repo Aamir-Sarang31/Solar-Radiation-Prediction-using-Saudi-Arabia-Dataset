@@ -1,5 +1,5 @@
 """
-Optuna-based Automated Hyperparameter Optimization Pipeline with MLflow Integration.
+RandomizedSearchCV Automated Hyperparameter Optimization Pipeline with MLflow Integration.
 Supports 10-Fold CV (or custom folds) across Deep Learning and Classical ML architectures.
 """
 
@@ -7,7 +7,6 @@ import os
 import sys
 import json
 import argparse
-import time
 from typing import Dict, Any, Tuple, Optional
 
 # Ensure workspace root is on sys.path
@@ -15,19 +14,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import numpy as np
 import pandas as pd
-import optuna
-from optuna.pruners import MedianPruner
-from optuna.samplers import TPESampler
+from scipy.stats import uniform, randint, loguniform
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.pipeline import Pipeline
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.svm import SVR
 from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neural_network import MLPRegressor
-from sklearn.compose import TransformedTargetRegressor
 
 try:
     from xgboost import XGBRegressor
@@ -81,140 +80,121 @@ def prepare_fold_data_scaled(
     return X_train, y_train, X_test, y_test, x_scaler, y_scaler
 
 
-def sample_hyperparameters(trial: optuna.Trial, model_name: str) -> Dict[str, Any]:
-    """Sample candidate hyperparameters for the specified model from its search space."""
+def get_param_distributions(model_name: str) -> Dict[str, Any]:
+    """Return the hyperparameter search distribution space for a specified model."""
     model_key = model_name.lower()
 
     if model_key in ["transformer", "ft_transformer"]:
-        d_model = trial.suggest_categorical("d_model", [32, 48, 64])
-        # nhead must divide d_model
-        valid_heads = [h for h in [2, 4, 8] if d_model % h == 0]
-        nhead = trial.suggest_categorical("nhead", valid_heads)
-        num_layers = trial.suggest_int("num_layers", 1, 3)
-        dim_feedforward = trial.suggest_int("dim_feedforward", 48, 192, step=16)
-        dropout = trial.suggest_float("dropout", 0.05, 0.3, step=0.05)
-        lr = trial.suggest_float("lr", 1e-4, 5e-3, log=True)
-        weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-3, log=True)
-        batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
-
         return {
-            "d_model": d_model,
-            "nhead": nhead,
-            "num_layers": num_layers,
-            "dim_feedforward": dim_feedforward,
-            "dropout": dropout,
-            "lr": lr,
-            "weight_decay": weight_decay,
-            "batch_size": batch_size
+            "d_model": [32, 48, 64],
+            "nhead": [2, 4, 8],
+            "num_layers": [1, 2, 3],
+            "dim_feedforward": [48, 64, 80, 96, 112, 128, 144, 160, 176, 192],
+            "dropout": [0.05, 0.10, 0.15, 0.20, 0.25, 0.30],
+            "lr": loguniform(1e-4, 5e-3),
+            "weight_decay": loguniform(1e-5, 1e-3),
+            "batch_size": [16, 32, 64]
         }
 
     elif model_key == "lstm":
-        embed_dim = trial.suggest_categorical("embed_dim", [16, 32, 64])
-        hidden_dim = trial.suggest_categorical("hidden_dim", [32, 64, 128])
-        num_layers = trial.suggest_int("num_layers", 1, 3)
-        dropout = trial.suggest_float("dropout", 0.1, 0.4, step=0.05)
-        bidirectional = trial.suggest_categorical("bidirectional", [True, False])
-        lr = trial.suggest_float("lr", 1e-4, 5e-3, log=True)
-        weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-3, log=True)
-        batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
-
         return {
-            "embed_dim": embed_dim,
-            "hidden_dim": hidden_dim,
-            "num_layers": num_layers,
-            "dropout": dropout,
-            "bidirectional": bidirectional,
-            "lr": lr,
-            "weight_decay": weight_decay,
-            "batch_size": batch_size
+            "embed_dim": [16, 32, 64],
+            "hidden_dim": [32, 64, 128],
+            "num_layers": [1, 2, 3],
+            "dropout": [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40],
+            "bidirectional": [True, False],
+            "lr": loguniform(1e-4, 5e-3),
+            "weight_decay": loguniform(1e-5, 1e-3),
+            "batch_size": [16, 32, 64]
         }
 
     elif model_key == "cnn1d":
-        base_channels = trial.suggest_categorical("base_channels", [16, 32, 64])
-        dropout = trial.suggest_float("dropout", 0.1, 0.4, step=0.05)
-        lr = trial.suggest_float("lr", 1e-4, 5e-3, log=True)
-        weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-3, log=True)
-        batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
-
         return {
-            "base_channels": base_channels,
-            "dropout": dropout,
-            "lr": lr,
-            "weight_decay": weight_decay,
-            "batch_size": batch_size
+            "base_channels": [16, 32, 64],
+            "dropout": [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40],
+            "lr": loguniform(1e-4, 5e-3),
+            "weight_decay": loguniform(1e-5, 1e-3),
+            "batch_size": [16, 32, 64]
         }
 
     elif model_key == "svr":
-        C = trial.suggest_float("C", 1.0, 1000.0, log=True)
-        epsilon = trial.suggest_float("epsilon", 0.01, 1.0, log=True)
-        gamma = trial.suggest_categorical("gamma", ["scale", "auto"])
-
         return {
-            "C": C,
-            "epsilon": epsilon,
-            "gamma": gamma
+            "C": loguniform(1.0, 1000.0),
+            "epsilon": loguniform(0.01, 1.0),
+            "gamma": ["scale", "auto"]
         }
 
     elif model_key == "hgb":
-        max_depth = trial.suggest_int("max_depth", 3, 10)
-        learning_rate = trial.suggest_float("learning_rate", 0.01, 0.3, log=True)
-        max_iter = trial.suggest_int("max_iter", 50, 300, step=50)
-        min_samples_leaf = trial.suggest_int("min_samples_leaf", 5, 50)
-        l2_regularization = trial.suggest_float("l2_regularization", 0.0, 10.0)
-
         return {
-            "max_depth": max_depth,
-            "learning_rate": learning_rate,
-            "max_iter": max_iter,
-            "min_samples_leaf": min_samples_leaf,
-            "l2_regularization": l2_regularization
+            "max_depth": randint(3, 11),
+            "learning_rate": loguniform(0.01, 0.3),
+            "max_iter": [50, 100, 150, 200, 250, 300],
+            "min_samples_leaf": randint(5, 51),
+            "l2_regularization": uniform(0.0, 10.0)
         }
 
     elif model_key == "xgb":
-        max_depth = trial.suggest_int("max_depth", 3, 10)
-        learning_rate = trial.suggest_float("learning_rate", 0.01, 0.3, log=True)
-        n_estimators = trial.suggest_int("n_estimators", 50, 300, step=50)
-        subsample = trial.suggest_float("subsample", 0.6, 1.0)
-        colsample_bytree = trial.suggest_float("colsample_bytree", 0.6, 1.0)
-        reg_alpha = trial.suggest_float("reg_alpha", 1e-3, 10.0, log=True)
-
-        return {
-            "max_depth": max_depth,
-            "learning_rate": learning_rate,
-            "n_estimators": n_estimators,
-            "subsample": subsample,
-            "colsample_bytree": colsample_bytree,
-            "reg_alpha": reg_alpha
+        dist = {
+            "max_depth": randint(3, 11),
+            "learning_rate": loguniform(0.01, 0.3),
+            "n_estimators": [50, 100, 150, 200, 250, 300],
+            "subsample": uniform(0.6, 0.4)
         }
+        if HAS_XGB:
+            dist["colsample_bytree"] = uniform(0.6, 0.4)
+            dist["reg_alpha"] = loguniform(1e-3, 10.0)
+        return dist
 
     elif model_key == "rf":
-        n_estimators = trial.suggest_int("n_estimators", 50, 200, step=50)
-        max_depth = trial.suggest_int("max_depth", 5, 25)
-        min_samples_split = trial.suggest_int("min_samples_split", 2, 10)
-        min_samples_leaf = trial.suggest_int("min_samples_leaf", 1, 10)
-
         return {
-            "n_estimators": n_estimators,
-            "max_depth": max_depth,
-            "min_samples_split": min_samples_split,
-            "min_samples_leaf": min_samples_leaf
+            "n_estimators": [50, 100, 150, 200],
+            "max_depth": randint(5, 26),
+            "min_samples_split": randint(2, 11),
+            "min_samples_leaf": randint(1, 11)
         }
 
     elif model_key == "ann":
-        layer1 = trial.suggest_categorical("hidden_layer_1", [16, 32, 64, 128])
-        layer2 = trial.suggest_categorical("hidden_layer_2", [0, 8, 16, 32, 64])
-        hidden_layer_sizes = (layer1,) if layer2 == 0 else (layer1, layer2)
-        alpha = trial.suggest_float("alpha", 1e-4, 10.0, log=True)
-        learning_rate_init = trial.suggest_float("learning_rate_init", 1e-4, 1e-2, log=True)
-
         return {
-            "hidden_layer_sizes": hidden_layer_sizes,
-            "alpha": alpha,
-            "learning_rate_init": learning_rate_init
+            "hidden_layer_sizes": [
+                (16,), (32,), (64,), (128,),
+                (16, 8), (16, 16),
+                (32, 8), (32, 16), (32, 32),
+                (64, 16), (64, 32), (64, 64),
+                (128, 32), (128, 64)
+            ],
+            "alpha": loguniform(1e-4, 10.0),
+            "learning_rate_init": loguniform(1e-4, 1e-2)
         }
 
     else:
         raise ValueError(f"Tuning not supported for model: '{model_name}'")
+
+
+def sample_hyperparameters(model_name: str, seed: Optional[int] = None) -> Dict[str, Any]:
+    """Sample a random parameter configuration for the specified model from its distributions."""
+    rng = np.random.RandomState(seed)
+    distributions = get_param_distributions(model_name)
+    params = {}
+
+    for param_name, dist in distributions.items():
+        if isinstance(dist, list):
+            idx = rng.randint(0, len(dist))
+            params[param_name] = dist[idx]
+        elif hasattr(dist, "rvs"):
+            val = dist.rvs(random_state=rng)
+            if hasattr(val, "item"):
+                val = val.item()
+            params[param_name] = val
+        else:
+            params[param_name] = dist
+
+    # Ensure validity constraints for Transformer (nhead must divide d_model)
+    if model_name.lower() in ["transformer", "ft_transformer"]:
+        d_model = params["d_model"]
+        valid_heads = [h for h in [2, 4, 8] if d_model % h == 0]
+        params["nhead"] = int(rng.choice(valid_heads))
+
+    return params
 
 
 def train_and_eval_dl_fold(
@@ -228,7 +208,6 @@ def train_and_eval_dl_fold(
     device: str = "cpu"
 ) -> float:
     """Train DL model on one fold with given params and return fold RMSE."""
-    # Filter architecture kwargs for build_model
     arch_kwargs = {
         k: v for k, v in params.items()
         if k not in ["lr", "weight_decay", "batch_size"]
@@ -270,99 +249,141 @@ def train_and_eval_dl_fold(
     return float(np.sqrt(mean_squared_error(y_test_raw, y_pred_raw)))
 
 
-def train_and_eval_classical_fold(
-    model_name: str,
-    params: Dict[str, Any],
-    X_train: np.ndarray,
-    y_train_raw: np.ndarray,
-    X_test: np.ndarray,
-    y_test_raw: np.ndarray,
-    seed: int = 42
-) -> float:
-    """Train classical model on one fold with given params and return fold RMSE."""
-    model_key = model_name.lower()
-
-    if model_key == "svr":
-        model = TransformedTargetRegressor(
-            regressor=SVR(
-                C=params["C"],
-                epsilon=params["epsilon"],
-                gamma=params["gamma"]
-            ),
-            transformer=StandardScaler()
-        )
-    elif model_key == "hgb":
-        model = HistGradientBoostingRegressor(
-            max_depth=params["max_depth"],
-            learning_rate=params["learning_rate"],
-            max_iter=params["max_iter"],
-            min_samples_leaf=params["min_samples_leaf"],
-            l2_regularization=params["l2_regularization"],
-            random_state=seed
-        )
-    elif model_key == "xgb":
-        if HAS_XGB:
-            model = XGBRegressor(
-                max_depth=params["max_depth"],
-                learning_rate=params["learning_rate"],
-                n_estimators=params["n_estimators"],
-                subsample=params["subsample"],
-                colsample_bytree=params["colsample_bytree"],
-                reg_alpha=params["reg_alpha"],
-                random_state=seed
-            )
-        else:
-            model = GradientBoostingRegressor(
-                max_depth=params["max_depth"],
-                learning_rate=params["learning_rate"],
-                n_estimators=params["n_estimators"],
-                subsample=params["subsample"],
-                random_state=seed
-            )
-    elif model_key == "rf":
-        model = RandomForestRegressor(
-            n_estimators=params["n_estimators"],
-            max_depth=params["max_depth"],
-            min_samples_split=params["min_samples_split"],
-            min_samples_leaf=params["min_samples_leaf"],
-            random_state=seed,
-            n_jobs=-1
-        )
-    elif model_key == "ann":
-        model = TransformedTargetRegressor(
-            regressor=MLPRegressor(
-                hidden_layer_sizes=params["hidden_layer_sizes"],
-                alpha=params["alpha"],
-                learning_rate_init=params["learning_rate_init"],
-                max_iter=800,
-                early_stopping=True,
-                random_state=seed
-            ),
-            transformer=StandardScaler()
-        )
-    else:
-        raise ValueError(f"Unsupported classical model for tuning: {model_name}")
-
-    model.fit(X_train, y_train_raw)
-    y_pred = model.predict(X_test)
-    y_pred = np.clip(y_pred, 0.0, None)
-
-    return float(np.sqrt(mean_squared_error(y_test_raw, y_pred)))
+def clipped_rmse_scorer(estimator, X: np.ndarray, y: np.ndarray) -> float:
+    """Scikit-learn compatible scoring function computing negative RMSE on non-negative predictions."""
+    preds = estimator.predict(X)
+    preds = np.clip(preds, 0.0, None)
+    return -float(np.sqrt(mean_squared_error(y, preds)))
 
 
-def create_objective(
+def tune_classical_model(
     model_name: str,
     df: pd.DataFrame,
     cv_splits: list,
+    n_iter: int = 30,
+    seed: int = 42
+) -> Tuple[Dict[str, Any], float]:
+    """Tune classical ML models using scikit-learn's RandomizedSearchCV."""
+    model_key = model_name.lower()
+
+    if model_key == "svr":
+        base_estimator = Pipeline([
+            ("scaler", StandardScaler()),
+            ("regressor", TransformedTargetRegressor(
+                regressor=SVR(),
+                transformer=StandardScaler()
+            ))
+        ])
+        param_distributions = {
+            "regressor__regressor__C": loguniform(1.0, 1000.0),
+            "regressor__regressor__epsilon": loguniform(0.01, 1.0),
+            "regressor__regressor__gamma": ["scale", "auto"]
+        }
+
+    elif model_key == "hgb":
+        base_estimator = Pipeline([
+            ("scaler", StandardScaler()),
+            ("regressor", HistGradientBoostingRegressor(random_state=seed))
+        ])
+        param_distributions = {
+            "regressor__max_depth": randint(3, 11),
+            "regressor__learning_rate": loguniform(0.01, 0.3),
+            "regressor__max_iter": [50, 100, 150, 200, 250, 300],
+            "regressor__min_samples_leaf": randint(5, 51),
+            "regressor__l2_regularization": uniform(0.0, 10.0)
+        }
+
+    elif model_key == "xgb":
+        inner = XGBRegressor(random_state=seed) if HAS_XGB else GradientBoostingRegressor(random_state=seed)
+        base_estimator = Pipeline([
+            ("scaler", StandardScaler()),
+            ("regressor", inner)
+        ])
+        param_distributions = {
+            "regressor__max_depth": randint(3, 11),
+            "regressor__learning_rate": loguniform(0.01, 0.3),
+            "regressor__n_estimators": [50, 100, 150, 200, 250, 300],
+            "regressor__subsample": uniform(0.6, 0.4)
+        }
+        if HAS_XGB:
+            param_distributions["regressor__colsample_bytree"] = uniform(0.6, 0.4)
+            param_distributions["regressor__reg_alpha"] = loguniform(1e-3, 10.0)
+
+    elif model_key == "rf":
+        base_estimator = Pipeline([
+            ("scaler", StandardScaler()),
+            ("regressor", RandomForestRegressor(random_state=seed, n_jobs=-1))
+        ])
+        param_distributions = {
+            "regressor__n_estimators": [50, 100, 150, 200],
+            "regressor__max_depth": randint(5, 26),
+            "regressor__min_samples_split": randint(2, 11),
+            "regressor__min_samples_leaf": randint(1, 11)
+        }
+
+    elif model_key == "ann":
+        base_estimator = Pipeline([
+            ("scaler", StandardScaler()),
+            ("regressor", TransformedTargetRegressor(
+                regressor=MLPRegressor(max_iter=800, early_stopping=True, random_state=seed),
+                transformer=StandardScaler()
+            ))
+        ])
+        param_distributions = {
+            "regressor__regressor__hidden_layer_sizes": [
+                (16,), (32,), (64,), (128,),
+                (16, 8), (16, 16),
+                (32, 8), (32, 16), (32, 32),
+                (64, 16), (64, 32), (64, 64),
+                (128, 32), (128, 64)
+            ],
+            "regressor__regressor__alpha": loguniform(1e-4, 10.0),
+            "regressor__regressor__learning_rate_init": loguniform(1e-4, 1e-2)
+        }
+    else:
+        raise ValueError(f"Classical tuning not supported for model: '{model_name}'")
+
+    X = df[FEATURE_NAMES].values
+    y = df[TARGET_NAME].values
+
+    search = RandomizedSearchCV(
+        estimator=base_estimator,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv_splits,
+        scoring=clipped_rmse_scorer,
+        random_state=seed,
+        refit=False
+    )
+    search.fit(X, y)
+
+    best_rmse = float(-search.best_score_)
+    best_params = {}
+    for k, v in search.best_params_.items():
+        clean_k = k.split("__")[-1]
+        if hasattr(v, "item"):
+            v = v.item()
+        best_params[clean_k] = v
+
+    return best_params, best_rmse
+
+
+def tune_dl_model(
+    model_name: str,
+    df: pd.DataFrame,
+    cv_splits: list,
+    n_iter: int = 30,
     epochs: int = 20,
     device: str = "cpu",
     seed: int = 42
-):
-    """Factory returning an Optuna objective function for K-Fold CV optimization."""
-    is_dl = model_name.lower() in ["transformer", "ft_transformer", "lstm", "cnn1d"]
+) -> Tuple[Dict[str, Any], float]:
+    """Execute randomized search across CV folds for PyTorch deep learning architectures."""
+    best_rmse = float("inf")
+    best_params = {}
 
-    def objective(trial: optuna.Trial) -> float:
-        params = sample_hyperparameters(trial, model_name)
+    for trial_idx in range(n_iter):
+        trial_seed = seed + trial_idx
+        params = sample_hyperparameters(model_name, seed=trial_seed)
         batch_size = params.get("batch_size", 32)
         fold_rmses = []
 
@@ -371,48 +392,32 @@ def create_objective(
                 df, train_idx, test_idx, scaler_type="standard"
             )
             y_test_raw = df.iloc[test_idx][TARGET_NAME].values
-            y_train_raw = df.iloc[train_idx][TARGET_NAME].values
 
-            if is_dl:
-                train_dataset = SolarDataset(X_train, y_train)
-                test_dataset = SolarDataset(X_test, y_test)
-                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+            train_dataset = SolarDataset(X_train, y_train)
+            test_dataset = SolarDataset(X_test, y_test)
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-                fold_rmse = train_and_eval_dl_fold(
-                    model_name=model_name,
-                    params=params,
-                    train_loader=train_loader,
-                    test_loader=test_loader,
-                    y_test_raw=y_test_raw,
-                    y_scaler=y_scaler,
-                    epochs=epochs,
-                    device=device
-                )
-            else:
-                fold_rmse = train_and_eval_classical_fold(
-                    model_name=model_name,
-                    params=params,
-                    X_train=X_train,
-                    y_train_raw=y_train_raw,
-                    X_test=X_test,
-                    y_test_raw=y_test_raw,
-                    seed=seed
-                )
-
+            fold_rmse = train_and_eval_dl_fold(
+                model_name=model_name,
+                params=params,
+                train_loader=train_loader,
+                test_loader=test_loader,
+                y_test_raw=y_test_raw,
+                y_scaler=y_scaler,
+                epochs=epochs,
+                device=device
+            )
             fold_rmses.append(fold_rmse)
 
-            # Report intermediate running mean RMSE for trial pruning
-            intermediate_mean = float(np.mean(fold_rmses))
-            trial.report(intermediate_mean, step=fold_idx)
+        mean_rmse = float(np.mean(fold_rmses))
+        print(f"  [Iter {trial_idx + 1}/{n_iter}] Mean CV RMSE: {mean_rmse:.2f} Wh/m²")
 
-            # Check if this trial should be pruned early
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
+        if mean_rmse < best_rmse:
+            best_rmse = mean_rmse
+            best_params = params
 
-        return float(np.mean(fold_rmses))
-
-    return objective
+    return best_params, best_rmse
 
 
 def run_tuning(
@@ -426,13 +431,16 @@ def run_tuning(
     seed: int = 42
 ) -> Tuple[Dict[str, Any], float]:
     """
-    Execute hyperparameter search with Optuna and log results to MLflow.
+    Execute hyperparameter search using RandomizedSearchCV / randomized search loop
+    and log results to MLflow.
     """
     target_device = get_default_device(device)
-    print(f"\n==================================================")
-    print(f" Optuna Hyperparameter Tuning: {model_name.upper()}")
-    print(f" Trials: {n_trials} | CV Strategy: {cv_folds}-Fold CV | Device: {target_device.upper()}")
-    print(f"==================================================")
+    is_dl = model_name.lower() in ["transformer", "ft_transformer", "lstm", "cnn1d"]
+
+    print("\n==================================================")
+    print(f" Randomized Hyperparameter Tuning: {model_name.upper()}")
+    print(f" Iterations: {n_trials} | CV Strategy: {cv_folds}-Fold CV | Device: {target_device.upper()}")
+    print("==================================================")
 
     df = load_dataset(dataset_path)
     cv_splits = get_10_fold_cv_splits(df, seed=seed)
@@ -444,46 +452,42 @@ def run_tuning(
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("Solar_Radiation_Prediction")
 
-    sampler = TPESampler(seed=seed)
-    pruner = MedianPruner(n_startup_trials=5, n_warmup_steps=2)
-    study_name = f"tune_{model_name}_{int(time.time())}"
-    study = optuna.create_study(
-        study_name=study_name,
-        direction="minimize",
-        sampler=sampler,
-        pruner=pruner
-    )
-
-    objective_fn = create_objective(
-        model_name=model_name,
-        df=df,
-        cv_splits=cv_splits,
-        epochs=epochs,
-        device=target_device,
-        seed=seed
-    )
-
-    with mlflow.start_run(run_name=f"optuna_tune_{model_name}"):
+    with mlflow.start_run(run_name=f"random_search_{model_name}"):
         mlflow.log_params({
+            "tuning_method": "RandomizedSearchCV",
             "tuning_model": model_name,
-            "n_trials": n_trials,
+            "n_iter": n_trials,
             "cv_folds": cv_folds,
-            "epochs_per_trial": epochs,
+            "epochs_per_trial": epochs if is_dl else 0,
             "device": target_device,
             "seed": seed
         })
 
-        study.optimize(objective_fn, n_trials=n_trials, show_progress_bar=True)
+        if is_dl:
+            best_params, best_rmse = tune_dl_model(
+                model_name=model_name,
+                df=df,
+                cv_splits=cv_splits,
+                n_iter=n_trials,
+                epochs=epochs,
+                device=target_device,
+                seed=seed
+            )
+        else:
+            best_params, best_rmse = tune_classical_model(
+                model_name=model_name,
+                df=df,
+                cv_splits=cv_splits,
+                n_iter=n_trials,
+                seed=seed
+            )
 
-        best_params = study.best_params
-        best_rmse = study.best_value
-
-        print(f"\n==================== TUNING COMPLETED ====================")
+        print("\n==================== TUNING COMPLETED ====================")
         print(f" Best {cv_folds}-Fold Mean RMSE: {best_rmse:.2f} Wh/m²")
-        print(f" Best Hyperparameters:")
+        print(" Best Hyperparameters:")
         for k, v in best_params.items():
             print(f"   -> {k}: {v}")
-        print(f"==========================================================\n")
+        print("==========================================================\n")
 
         # Log best results to MLflow
         mlflow.log_metric("best_cv_rmse", best_rmse)
@@ -504,7 +508,7 @@ def run_tuning(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Automated Hyperparameter Optimization via Optuna")
+    parser = argparse.ArgumentParser(description="Automated Hyperparameter Optimization via RandomizedSearchCV")
     parser.add_argument(
         "--model",
         type=str,
@@ -512,7 +516,7 @@ def main():
         choices=["transformer", "ft_transformer", "lstm", "cnn1d", "svr", "hgb", "xgb", "rf", "ann"],
         help="Architecture to tune"
     )
-    parser.add_argument("--trials", type=int, default=30, help="Number of Optuna trials")
+    parser.add_argument("--trials", type=int, default=30, help="Number of randomized search iterations")
     parser.add_argument("--cv-folds", type=int, default=10, help="Number of CV folds to evaluate per trial")
     parser.add_argument("--epochs", type=int, default=20, help="Number of epochs per fold for DL models")
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cpu' or 'cuda')")

@@ -85,7 +85,11 @@ class SolarTransformer(nn.Module):
             batch_first=True,
             norm_first=True
         )
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer,
+            num_layers=num_layers,
+            enable_nested_tensor=False
+        )
 
         # Final regression head operating on the [CLS] representation
         self.final_norm = nn.LayerNorm(d_model)

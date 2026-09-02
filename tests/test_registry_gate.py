@@ -2,9 +2,7 @@
 Unit tests for MLflow Model Registry promotion gate logic.
 """
 
-import os
-import pytest
-from src.evaluate import check_promotion_gate, TARGET_R2_THRESHOLD, MAX_RMSE_THRESHOLD
+from src.evaluate import check_promotion_gate
 
 
 def test_promotion_gate_thresholds():
@@ -29,13 +27,14 @@ def test_promotion_gate_thresholds():
 
 
 def test_promotion_gate_acceptance():
-    """Verify promotion gate accepts high-performing models."""
+    """Verify promotion gate accepts high-performing models that outperform production."""
     assert check_promotion_gate(
         candidate_model_name="test_transformer",
-        candidate_rmse=170.0,
-        candidate_r2=0.975,
+        candidate_rmse=95.0,
+        candidate_r2=0.995,
         candidate_checkpoint="dummy.pt",
-        candidate_scaler="dummy.pkl"
+        candidate_scaler="dummy.pkl",
+        dry_run=True
     )
 
 

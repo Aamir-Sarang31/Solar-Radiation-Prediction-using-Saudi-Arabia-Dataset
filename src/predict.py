@@ -39,7 +39,21 @@ class SolarPredictor:
         return model, scaler
 
     def _load_pytorch_model(self, model_name: str, checkpoint_path: str, scaler_path: str):
-        model = build_model(model_name)
+        config_path = os.path.join("configs", f"{model_name.lower()}_best.json")
+        arch_kwargs = {}
+        if os.path.exists(config_path):
+            try:
+                import json
+                with open(config_path, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                arch_kwargs = {
+                    k: v for k, v in cfg.items()
+                    if k not in ["lr", "weight_decay", "batch_size", "epochs"]
+                }
+            except Exception:
+                arch_kwargs = {}
+
+        model = build_model(model_name, **arch_kwargs)
         if os.path.exists(checkpoint_path):
             state_dict = torch.load(checkpoint_path, map_location=torch.device("cpu"), weights_only=True)
             model.load_state_dict(state_dict)
@@ -65,7 +79,7 @@ class SolarPredictor:
                 raise ValueError(f"Missing required feature: '{feature}'")
             vector.append(float(input_data[feature]))
 
-        feature_array = np.array(vector).reshape(1, -1)
+        feature_array = np.array(vector, dtype=np.float64).reshape(1, -1)
 
         model_key = model_type.lower()
 

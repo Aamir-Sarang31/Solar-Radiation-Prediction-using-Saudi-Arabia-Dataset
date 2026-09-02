@@ -3,8 +3,9 @@
 [![CI/CD](https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/actions/workflows/ci.yml/badge.svg)](https://github.com/Aamir-Sarang31/Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-RandomizedSearchCV-F7931E.svg)](https://scikit-learn.org/)
+[![DVC](https://img.shields.io/badge/DVC-Data%20%26%20Model%20Versioning-945DD6.svg)](https://dvc.org/)
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking%20%26%20Registry-0194E2.svg)](https://mlflow.org/)
-[![Optuna](https://img.shields.io/badge/Optuna-HPO-5C2D91.svg)](https://optuna.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Research Paper & Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling using Multi-Station Meteorological Observations across Saudi Arabia.
@@ -17,7 +18,8 @@
 - [Key Features](#-key-features)
 - [Benchmark Results](#-controlled-model-performance--benchmarks-10-fold-cross-validation)
 - [Deep Learning Architectures](#-deep-learning-architectures)
-- [Hyperparameter Tuning (Optuna)](#-automated-hyperparameter-tuning-optuna)
+- [Hyperparameter Tuning (RandomizedSearchCV)](#-automated-hyperparameter-tuning-randomizedsearchcv)
+- [Data & Model Versioning (DVC)](#-data--model-versioning-dvc)
 - [MLOps Pipeline](#-mlops-mlflow-experiment-tracking--registry-gating)
 - [Project Structure](#-project-structure)
 - [Quickstart Guide](#-quickstart-guide)
@@ -38,7 +40,8 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 
 - 🧠 **3 Custom Deep Learning Architectures** (FT-Transformer, LSTM, 1D CNN)
 - 📊 **8 Classical ML Baselines** (SVR, HGB, XGBoost, RF, ANN, LR, DT, KNN)
-- 🔬 **Automated Hyperparameter Optimization** via Optuna (Bayesian TPE Search)
+- 🔬 **Automated Hyperparameter Optimization** via Scikit-Learn `RandomizedSearchCV`
+- 📦 **Data & Model Version Control** via DVC (Data Version Control)
 - 📈 **End-to-end MLflow Experiment Tracking** with automated Model Registry promotion gating
 - 🌐 **Interactive Flask Web Application** with real-time predictions and station maps
 - ⚙️ **CI/CD Pipelines** with GitHub Actions
@@ -50,8 +53,9 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 | Feature | Description |
 |---|---|
 | **11-Model Controlled Benchmark** | All models evaluated under identical 10-fold CV partitions, same seed, and uniform scaling |
-| **FT-Transformer Architecture** | Feature Tokenizer Transformer achieving **R² = 0.9896** — best-in-class for tabular solar data |
-| **Optuna Hyperparameter Tuning** | Bayesian TPE search with MedianPruner for automated, efficient optimization |
+| **FT-Transformer Architecture** | Feature Tokenizer Transformer achieving **R² = 0.9919** — best-in-class for tabular solar data |
+| **RandomizedSearchCV Tuning** | Scikit-Learn randomized search across continuous distributions for classical & PyTorch models |
+| **Data & Model Versioning (DVC)** | DVC tracking for `dataset.csv` and model weights with reproducible `dvc.yaml` pipelines |
 | **MLflow Experiment Tracking** | Every run logs parameters, metrics, plots, and model artifacts to SQLite |
 | **Model Registry Promotion Gate** | Automated quality gate blocks deployment if candidate fails RMSE/R² thresholds |
 | **43-Station LOSO Validation** | Spatial generalization testing across all Saudi Arabian weather stations |
@@ -65,15 +69,15 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 All 11 models evaluated under the **exact same 10-fold CV partitions, same random seed (42), and uniform feature/target scaling** on `dataset.csv` (1,649 records across 43 stations). Sorted strictly by ascending RMSE (primary gate metric):
 
 | Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | R² Score | Time (s/fold) |
-| :---: | :--- | :--- | :---: | :---: | :---: | :---: |
-| 🥇 | **FT-Transformer (Ours)** | **Deep Learning** | **94.38 ± 6.27** | **126.21 ± 13.17** | **0.9896 ± 0.0026** | **1.94** |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: |
+| 🥇 | **FT-Transformer (Ours)** | **Deep Learning** | **81.10 ± 7.21** | **110.47 ± 12.04** | **0.9919 ± 0.0023** | **1.69** |
 | 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | 172.50 ± 14.25 | 0.9807 ± 0.0037 | 0.36 |
 | 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | 178.39 ± 22.46 | 0.9792 ± 0.0055 | 0.16 |
 | 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | 188.36 ± 35.15 | 0.9765 ± 0.0080 | 0.04 |
 | 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | 194.14 ± 42.34 | 0.9746 ± 0.0122 | 0.00 |
 | 6 | XGBoost | Ensemble | 155.65 ± 11.10 | 215.21 ± 20.70 | 0.9697 ± 0.0067 | 0.10 |
 | 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | 230.28 ± 26.87 | 0.9653 ± 0.0090 | 0.22 |
-| 8 | **1D CNN (Ours)** | **Deep Learning** | 241.06 ± 15.84 | 318.02 ± 24.57 | 0.9340 ± 0.0141 | 1.83 |
+| 8 | **1D CNN (Ours)** | **Deep Learning** | 214.28 ± 19.76 | 283.96 ± 25.74 | 0.9471 ± 0.0133 | 1.42 |
 | 9 | **Solar LSTM (Ours)** | **Deep Learning** | 273.68 ± 40.51 | 362.18 ± 55.91 | 0.9117 ± 0.0335 | 1.62 |
 | 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | 410.28 ± 51.76 | 0.8895 ± 0.0312 | 0.01 |
 | 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | 447.20 ± 27.45 | 0.8699 ± 0.0236 | 0.00 |
@@ -126,38 +130,37 @@ Input: (B, 21, 1)
 
 ---
 
-## 🔍 Automated Hyperparameter Tuning (Optuna)
+## 🔍 Automated Hyperparameter Tuning (RandomizedSearchCV)
 
-The project includes a fully automated hyperparameter optimization pipeline using **Optuna** with Bayesian TPE (Tree-structured Parzen Estimator) search.
+The project includes an automated hyperparameter optimization pipeline using **Scikit-Learn's `RandomizedSearchCV`** paradigm with continuous probability distributions (`scipy.stats.loguniform`, `uniform`, `randint`).
 
 ### How It Works
 
-1. **Optuna** creates trials by sampling hyperparameters from defined search spaces
-2. Each trial evaluates performance via **K-Fold Cross-Validation** (default: 10-fold)
-3. **MedianPruner** stops unpromising trials early (if fold-by-fold RMSE is worse than the median of completed trials)
-4. Every trial is automatically logged to **MLflow**
-5. The best configuration is exported to a JSON file for reproducible re-training
+1. **Classical Models (SVR, HGB, XGBoost, RF, ANN)**: Uses `sklearn.model_selection.RandomizedSearchCV` wrapped inside leakage-free `Pipeline` and `TransformedTargetRegressor` estimators evaluated on pre-computed K-Fold CV splits.
+2. **Deep Learning Models (Transformer, LSTM, 1D CNN)**: Uses a randomized hyperparameter search loop sampling architecture hyperparameters (learning rate, weight decay, token dimension, attention heads) with full K-Fold cross-validation.
+3. Every search run is tracked automatically in **MLflow**.
+4. The best configuration is exported to a JSON file in `configs/` for reproducible training.
 
 ### Supported Models & Search Spaces
 
-| Model | Tunable Hyperparameters |
-|---|---|
-| **FT-Transformer** | `d_model` (32/48/64), `nhead` (2/4/8), `num_layers` (1–3), `dim_feedforward` (48–192), `dropout` (0.05–0.30), `lr` (1e-4 to 5e-3), `weight_decay`, `batch_size` |
-| **LSTM** | `embed_dim`, `hidden_dim`, `num_layers`, `dropout`, `bidirectional`, `lr`, `batch_size` |
-| **1D CNN** | `base_channels`, `dropout`, `lr`, `weight_decay`, `batch_size` |
-| **SVR** | `C` (1–1000), `epsilon` (0.01–1.0), `gamma` (scale/auto) |
-| **HGB** | `max_depth`, `learning_rate`, `max_iter`, `min_samples_leaf`, `l2_regularization` |
-| **XGBoost** | `max_depth`, `learning_rate`, `n_estimators`, `subsample`, `colsample_bytree`, `reg_alpha` |
-| **Random Forest** | `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf` |
-| **ANN (MLP)** | `hidden_layer_sizes`, `alpha`, `learning_rate_init` |
+| Model | Tunable Hyperparameters | Distribution / Candidates |
+|---|---|---|
+| **FT-Transformer** | `d_model`, `nhead`, `num_layers`, `dim_feedforward`, `dropout`, `lr`, `weight_decay`, `batch_size` | Discrete [32, 48, 64], loguniform(1e-4, 5e-3) |
+| **LSTM** | `embed_dim`, `hidden_dim`, `num_layers`, `dropout`, `bidirectional`, `lr`, `batch_size` | Discrete [16, 32, 64], loguniform(1e-4, 5e-3) |
+| **1D CNN** | `base_channels`, `dropout`, `lr`, `weight_decay`, `batch_size` | Discrete [16, 32, 64], loguniform(1e-4, 5e-3) |
+| **SVR** | `C`, `epsilon`, `gamma` | loguniform(1.0, 1000.0), loguniform(0.01, 1.0) |
+| **HGB** | `max_depth`, `learning_rate`, `max_iter`, `min_samples_leaf`, `l2_regularization` | randint(3, 11), loguniform(0.01, 0.3) |
+| **XGBoost** | `max_depth`, `learning_rate`, `n_estimators`, `subsample`, `colsample_bytree`, `reg_alpha` | randint(3, 11), loguniform(0.01, 0.3) |
+| **Random Forest** | `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf` | Discrete [50, 100, 150, 200], randint(5, 26) |
+| **ANN (MLP)** | `hidden_layer_sizes`, `alpha`, `learning_rate_init` | Layer combinations, loguniform(1e-4, 10.0) |
 
 ### Usage
 
 ```bash
-# Tune FT-Transformer across 10-Fold CV (30 trials)
+# Tune FT-Transformer across 10-Fold CV (30 iterations)
 python src/tune.py --model transformer --trials 30 --cv-folds 10
 
-# Tune SVR (50 trials)
+# Tune SVR with RandomizedSearchCV (50 iterations)
 python src/tune.py --model svr --trials 50 --cv-folds 10
 
 # Retrain with tuned hyperparameters
@@ -165,6 +168,33 @@ python src/train.py --model transformer --config configs/transformer_best.json -
 ```
 
 Tuned configurations are saved to `configs/{model_name}_best.json` for reproducibility.
+
+---
+
+## 📦 Data & Model Versioning (DVC)
+
+The project integrates **DVC (Data Version Control)** to define the ML pipeline as a reproducible directed acyclic graph (DAG). Dataset (`dataset.csv`) and model checkpoints (`model/`) remain in Git for immediate reproducibility after cloning.
+
+### DVC Pipeline (`dvc.yaml`)
+
+The complete ML workflow — from hyperparameter tuning through training to evaluation — is codified as a connected DAG with explicit dependency tracking:
+
+```bash
+# Visualize pipeline DAG
+dvc dag
+
+# Reproduce full pipeline (only re-runs stages whose dependencies changed)
+dvc repro
+
+# Reproduce a specific stage
+dvc repro train
+```
+
+```
++------+     +---------+     +----------+
+| tune | --> |  train  | --> | evaluate |
++------+     +---------+     +----------+
+```
 
 ---
 
@@ -204,11 +234,15 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │
+├── .dvc/                          # DVC configuration and internal metadata
+├── .dvcignore                     # DVC ignore rules
+├── dvc.yaml                       # Reproducible DVC ML pipeline definition (tune → train → evaluate)
+│
 ├── src/                           # Core source code
 │   ├── __init__.py
 │   ├── dataset.py                 # Data loading, feature definitions, CV splits
 │   ├── train.py                   # MLflow-integrated training pipeline (10-Fold & LOSO CV)
-│   ├── tune.py                    # Optuna hyperparameter optimization module
+│   ├── tune.py                    # RandomizedSearchCV hyperparameter optimization module
 │   ├── evaluate.py                # MLflow Model Registry promotion gate
 │   ├── predict.py                 # SolarPredictor inference API
 │   └── models/
@@ -217,16 +251,16 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │       ├── lstm.py                # Solar LSTM architecture
 │       └── cnn1d.py               # Solar 1D CNN architecture
 │
-├── tests/                         # Test suite (33 tests)
+├── tests/                         # Test suite (41 tests)
 │   ├── __init__.py
 │   ├── test_api.py                # Flask API endpoint tests
 │   ├── test_models.py             # Forward/backward pass tests for all DL models
 │   ├── test_preprocessing.py      # Dataset loading, CV split, and scaling tests
 │   ├── test_registry_gate.py      # MLflow promotion gate tests
-│   └── test_tuning.py             # Optuna search space & tuning smoke tests
+│   └── test_tuning.py             # RandomizedSearchCV search space & tuning smoke tests
 │
 ├── configs/                       # Tuned hyperparameter configurations (JSON)
-│   └── transformer_best.json      # Best FT-Transformer config from Optuna
+│   └── transformer_best.json      # Best FT-Transformer config from tuning
 │
 ├── model/                         # Trained model checkpoints & scalers
 │   ├── production_dl_model.pt     # Current production champion model
@@ -246,7 +280,8 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │   └── app.js                     # Frontend JavaScript logic
 │
 ├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
-├── requirements.txt               # Python dependencies
+├── requirements.txt               # Production Python dependencies (Flask, PyTorch, sklearn)
+├── requirements-dev.txt           # Development dependencies (MLflow, DVC, scipy, pytest)
 ├── Dockerfile                     # Docker container configuration
 ├── .dockerignore                  # Docker build exclusions
 ├── .github/workflows/
@@ -276,8 +311,8 @@ venv\Scripts\activate
 # On Linux/macOS:
 source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install all dependencies (production + training/MLOps tools)
+pip install -r requirements-dev.txt
 ```
 
 ### 2. Train Models
@@ -292,17 +327,17 @@ python src/train.py --model transformer --epochs 25 --cv kfold
 # Train with 43-Fold Leave-One-Station-Out CV
 python src/train.py --model transformer --epochs 25 --cv loso
 
-# Train with tuned hyperparameters from Optuna
+# Train with tuned hyperparameters
 python src/train.py --model transformer --config configs/transformer_best.json --cv kfold
 ```
 
 ### 3. Run Hyperparameter Tuning
 
 ```bash
-# Tune FT-Transformer (30 trials, 10-Fold CV)
+# Tune FT-Transformer (30 iterations, 10-Fold CV)
 python src/tune.py --model transformer --trials 30 --cv-folds 10
 
-# Tune SVR (50 trials)
+# Tune SVR with RandomizedSearchCV (50 iterations)
 python src/tune.py --model svr --trials 50
 
 # Tune all supported models
@@ -313,7 +348,7 @@ python src/tune.py --model xgb --trials 50
 ### 4. Run Tests & Promotion Gate
 
 ```bash
-# Run complete test suite (33 tests)
+# Run complete test suite (41 tests)
 python -m pytest tests/ -v
 
 # Run MLflow Model Registry Promotion Gate
@@ -378,9 +413,9 @@ waitress-serve --port=8000 wsgi:app       # Windows
 Triggers on every push and pull request to `main`/`master`:
 
 1. **Checkout** → Set up Python 3.11
-2. **Install Dependencies** → PyTorch + requirements.txt
+2. **Install Dependencies** → PyTorch (CPU) + `requirements-dev.txt` (MLflow, DVC, scipy, pytest, flake8)
 3. **Code Quality** → Flake8 linting (syntax errors, undefined names)
-4. **Test Suite** → `pytest tests/ -v` (33 tests)
+4. **Test Suite** → `pytest tests/ -v` (41 tests)
 5. **Smoke Training** → 3-epoch FT-Transformer training with MLflow tracking
 6. **Promotion Gate** → MLflow Registry quality threshold verification
 
@@ -388,7 +423,7 @@ Triggers on every push and pull request to `main`/`master`:
 
 ## 🧪 Testing
 
-The project includes **33 automated tests** across 5 test modules:
+The project includes **41 automated tests** across 5 test modules:
 
 | Module | Tests | Coverage |
 |---|:---:|---|
@@ -396,7 +431,7 @@ The project includes **33 automated tests** across 5 test modules:
 | `test_models.py` | 7 | Forward pass, backward pass gradients, single-sample inference for all DL models |
 | `test_preprocessing.py` | 5 | Feature list completeness, dataset loading, 10-Fold/LOSO splits, scaling |
 | `test_registry_gate.py` | 3 | Promotion thresholds, acceptance criteria, MLflow retrieval |
-| `test_tuning.py` | 11 | Search space sampling (8 models), device detection, classical/DL smoke tuning |
+| `test_tuning.py` | 19 | RandomizedSearchCV distributions, sampling (8 models), device detection, classical/DL smoke tuning |
 
 ```bash
 # Run all tests
