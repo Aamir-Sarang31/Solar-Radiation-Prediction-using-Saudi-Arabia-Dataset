@@ -102,10 +102,10 @@ This demonstrates strong generalization to **previously unseen geographic locati
 
 ```
 Input: (B, 21 features)
-  ├── Numerical Feature Tokenizer: 21 × Linear(1, 48) projections → (B, 21, 48)
-  ├── Prepend Learnable [CLS] Token → (B, 22, 48)
-  ├── 2× Pre-LN TransformerEncoderLayer (4 Heads, DimFF=96, Dropout=0.15)
-  └── Extract [CLS] Token → LayerNorm → Linear(48, 1) → Output GHI (B, 1)
+  ├── Numerical Feature Tokenizer: 21 × Linear(1, 64) projections → (B, 21, 64)
+  ├── Prepend Learnable [CLS] Token → (B, 22, 64)
+  ├── 2× Pre-LN TransformerEncoderLayer (d_model=64, 4 Heads, DimFF=48, Dropout=0.10)
+  └── Extract [CLS] Token → LayerNorm → Linear(64, 1) → Output GHI (B, 1)
 ```
 
 **Key Innovation:** Each numerical feature is independently projected into a learned embedding space via its own linear layer, then processed through multi-head self-attention — enabling the model to learn complex inter-feature interactions (e.g., how DNI modulates with temperature and pressure seasonally).
@@ -114,8 +114,8 @@ Input: (B, 21 features)
 
 ```
 Input: (B, 1, 21)
-  ├── Stem Conv1d(1, 32) + BatchNorm1d + GELU
-  ├── Residual ConvBlock1D(32, 64) + Residual ConvBlock1D(64, 128)
+  ├── Stem Conv1d(1, 64) + BatchNorm1d + GELU
+  ├── Residual ConvBlock1D(64, 128) + Residual ConvBlock1D(128, 256)
   └── AdaptiveAvgPool1d(1) → Flatten → MLP Head → Output GHI (B, 1)
 ```
 
@@ -124,7 +124,7 @@ Input: (B, 1, 21)
 ```
 Input: (B, 21, 1)
   ├── Linear Feature Projection (1 → 32) + LayerNorm
-  ├── 2-Layer Bidirectional LSTM(32, 64, Dropout=0.2)
+  ├── 1-Layer Bidirectional LSTM(32, 64, Dropout=0.30)
   └── Global Average Pooling → LayerNorm → MLP Head → Output GHI (B, 1)
 ```
 
@@ -214,17 +214,18 @@ The project uses **MLflow** with an SQLite backend (`sqlite:///mlflow.db`) for e
 ### Model Registry Promotion Gate (CI/CD)
 
 When a training run finishes:
-1. `src/evaluate.py --gate` compares the candidate model's RMSE and R² against the current `Production` model.
-2. If candidate meets quality thresholds (RMSE ≤ 300, R² ≥ 0.9):
+1. `src/evaluate.py --gate` verifies candidate model metrics against quality thresholds (RMSE ≤ 300, R² ≥ 0.90).
+2. Compares candidate RMSE against the current `@champion` model in the MLflow Model Registry.
+3. If approved:
    - Registers new version in MLflow Model Registry (`SolarRadiationPredictor`).
-   - Promotes model to `Production`.
-   - Exports promoted weights to `model/production_dl_model.pt`.
-3. If candidate fails: blocks promotion in CI.
+   - Assigns the `@champion` model alias.
+   - Automatically exports weights and scaler bundle to `model/production_dl_model.pt` and `model/production_dl_scaler.pkl`.
+4. If candidate fails: blocks promotion in CI/CD.
 
 ```bash
-# View all experiments and runs
-mlflow ui --backend-store-uri sqlite:///mlflow.db
-# Open http://127.0.0.1:5000
+# View all experiments, runs, and registered model versions
+mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
+# Open http://127.0.0.1:5001
 ```
 
 ---
@@ -260,7 +261,9 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │   └── test_tuning.py             # RandomizedSearchCV search space & tuning smoke tests
 │
 ├── configs/                       # Tuned hyperparameter configurations (JSON)
-│   └── transformer_best.json      # Best FT-Transformer config from tuning
+│   ├── transformer_best.json      # Best FT-Transformer config (R² = 0.9919)
+│   ├── cnn1d_best.json            # Best 1D CNN config (R² = 0.9471)
+│   └── lstm_best.json             # Best Solar LSTM config (R² = 0.8930)
 │
 ├── model/                         # Trained model checkpoints & scalers
 │   ├── production_dl_model.pt     # Current production champion model
@@ -285,7 +288,8 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 ├── Dockerfile                     # Docker container configuration
 ├── .dockerignore                  # Docker build exclusions
 ├── .github/workflows/
-│   └── ci.yml                     # GitHub Actions CI/CD pipeline
+│   ├── ci.yml                     # Continuous Integration & MLflow promotion gate
+│   └── cd.yml                     # Continuous Deployment (Docker build & webhook)
 │
 ├── Contribute.md                  # Contributing guidelines
 ├── Learn.md                       # Learning guide for newcomers
@@ -417,7 +421,14 @@ Triggers on every push and pull request to `main`/`master`:
 3. **Code Quality** → Flake8 linting (syntax errors, undefined names)
 4. **Test Suite** → `pytest tests/ -v` (41 tests)
 5. **Smoke Training** → 3-epoch FT-Transformer training with MLflow tracking
-6. **Promotion Gate** → MLflow Registry quality threshold verification
+6. **Promotion Gate** → MLflow Registry quality threshold verification (`--dry-run` on PRs, full export on `main`)
+
+### `.github/workflows/cd.yml` — Continuous Deployment
+
+Triggers automatically on push to `main`/`master`:
+
+1. **Docker Buildx** → Builds containerized production image using `Dockerfile`
+2. **Deployment Trigger** → Invokes automated webhook for production hosting (e.g., Render, Railway)
 
 ---
 
