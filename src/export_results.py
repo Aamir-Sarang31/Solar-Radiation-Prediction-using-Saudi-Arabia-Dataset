@@ -130,6 +130,7 @@ def export_cross_validation_csvs(
             "mbe": float(metrics.get("mbe", np.mean(y_pred - y_true))),
             "nmae_pct": float(metrics.get("nmae_pct", (metrics["mae"] / np.mean(y_true)) * 100.0)),
             "nrmse_pct": float(metrics.get("nrmse_pct", (metrics["rmse"] / np.mean(y_true)) * 100.0)),
+            "inference_time_ms": float(metrics.get("inference_time_ms", 0.0)),
             "training_time_s": float(metrics.get("training_time", 0.0))
         }
         fold_records.append(fold_rec)
@@ -247,6 +248,7 @@ def export_cross_validation_csvs(
         "std_nmae_pct": float(folds_df["nmae_pct"].std()),
         "mean_nrmse_pct": float(folds_df["nrmse_pct"].mean()),
         "std_nrmse_pct": float(folds_df["nrmse_pct"].std()),
+        "avg_inference_time_ms": float(folds_df["inference_time_ms"].mean()) if "inference_time_ms" in folds_df.columns else 0.0,
         "avg_train_time_s": float(folds_df["training_time_s"].mean()),
         "total_train_time_s": float(folds_df["training_time_s"].sum()),
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")

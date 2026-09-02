@@ -68,19 +68,19 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 
 All 11 models evaluated under the **exact same 10-fold CV partitions, same random seed (42), and uniform feature/target scaling** on `dataset.csv` (1,649 records across 43 stations). Sorted strictly by ascending RMSE (primary gate metric):
 
-| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | R² Score | Time (s/fold) |
+| Rank | Model Architecture | Category | MAE (Wh/m²) | RMSE (Wh/m²) | R² Score | Inference Time (ms) |
 | :---: | :--- | :--- | :--- | :---: | :---: | :---: |
-| 🥇 | FT-Transformer | **Deep Learning** | **81.10 ± 7.21** | **110.47 ± 12.04** | **0.9919 ± 0.0023** | **1.69** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | 172.50 ± 14.25 | 0.9807 ± 0.0037 | 0.36 |
-| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | 178.39 ± 22.46 | 0.9792 ± 0.0055 | 0.16 |
-| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | 188.36 ± 35.15 | 0.9765 ± 0.0080 | 0.04 |
-| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | 194.14 ± 42.34 | 0.9746 ± 0.0122 | 0.00 |
-| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | 215.21 ± 20.70 | 0.9697 ± 0.0067 | 0.10 |
-| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | 230.28 ± 26.87 | 0.9653 ± 0.0090 | 0.22 |
-| 8 | 1D CNN  | **Deep Learning** | 214.28 ± 19.76 | 283.96 ± 25.74 | 0.9471 ± 0.0133 | 1.42 |
-| 9 | Solar LSTM  | **Deep Learning** | 273.68 ± 40.51 | 362.18 ± 55.91 | 0.9117 ± 0.0335 | 1.62 |
-| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | 410.28 ± 51.76 | 0.8895 ± 0.0312 | 0.01 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | 447.20 ± 27.45 | 0.8699 ± 0.0236 | 0.00 |
+| 🥇 | FT-Transformer | **Deep Learning** | **81.10 ± 7.21** | **110.47 ± 12.04** | **0.9919 ± 0.0023** | **0.68** |
+| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | 172.50 ± 14.25 | 0.9807 ± 0.0037 | 0.18 |
+| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | 178.39 ± 22.46 | 0.9792 ± 0.0055 | 0.79 |
+| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | 188.36 ± 35.15 | 0.9765 ± 0.0080 | 0.19 |
+| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | 194.14 ± 42.34 | 0.9746 ± 0.0122 | 0.07 |
+| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | 215.21 ± 20.70 | 0.9697 ± 0.0067 | 0.33 |
+| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | 230.28 ± 26.87 | 0.9653 ± 0.0090 | 30.86 |
+| 8 | 1D CNN | **Deep Learning** | 214.28 ± 19.76 | 283.96 ± 25.74 | 0.9471 ± 0.0133 | 1.32 |
+| 9 | Solar LSTM | **Deep Learning** | 273.68 ± 40.51 | 362.18 ± 55.91 | 0.9117 ± 0.0335 | 0.52 |
+| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | 410.28 ± 51.76 | 0.8895 ± 0.0312 | 0.08 |
+| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | 447.20 ± 27.45 | 0.8699 ± 0.0236 | 2.94 |
 
 ### 🗺️ 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation
 

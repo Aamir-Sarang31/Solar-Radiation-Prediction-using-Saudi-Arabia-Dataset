@@ -129,11 +129,13 @@ def train_single_fold(
     # Evaluation
     model.eval()
     all_preds_scaled = []
+    t_inf_start = time.perf_counter()
     with torch.no_grad():
         for batch_X, _ in test_loader:
             batch_X = batch_X.to(device)
             preds = model(batch_X)
             all_preds_scaled.extend(preds.cpu().numpy().flatten())
+    inf_time_ms = ((time.perf_counter() - t_inf_start) / max(len(all_preds_scaled), 1)) * 1000.0
 
     y_pred_scaled = np.array(all_preds_scaled).reshape(-1, 1)
     y_pred_raw = y_scaler.inverse_transform(y_pred_scaled).flatten()
@@ -141,6 +143,7 @@ def train_single_fold(
 
     metrics = compute_metrics(y_test_raw, y_pred_raw)
     metrics["training_time"] = training_time
+    metrics["inference_time_ms"] = inf_time_ms
     return metrics, y_pred_raw, training_time
 
 
@@ -185,11 +188,14 @@ def train_single_fold_classical(
     model.fit(X_train, y_train_raw)
     training_time = time.time() - start_time
 
+    t_inf_start = time.perf_counter()
     y_pred = model.predict(X_test)
+    inf_time_ms = ((time.perf_counter() - t_inf_start) / max(len(y_pred), 1)) * 1000.0
     y_pred = np.clip(y_pred, 0.0, None)
 
     metrics = compute_metrics(y_test_raw, y_pred)
     metrics["training_time"] = training_time
+    metrics["inference_time_ms"] = inf_time_ms
     return metrics, y_pred, training_time, model
 
 
@@ -445,6 +451,7 @@ def run_cross_validation(
             "std_nmae_pct": float(np.std(nmaes)),
             "mean_nrmse_pct": float(np.mean(nrmses)),
             "std_nrmse_pct": float(np.std(nrmses)),
+            "avg_inference_time_ms": float(np.mean([m.get("inference_time_ms", 0.0) for m in fold_metrics_list])),
             "avg_training_time_s": float(total_training_time / num_folds),
             "total_training_time_s": float(total_training_time)
         }
@@ -502,7 +509,7 @@ def run_cross_validation(
         print(f" R²:    {summary_metrics['mean_r2']:.4f} ± {summary_metrics['std_r2']:.4f}")
         print(f" MBE:   {summary_metrics['mean_mbe']:.2f} ± {summary_metrics['std_mbe']:.2f} Wh/m²")
         print(f" nMAE:  {summary_metrics['mean_nmae_pct']:.2f}% | nRMSE: {summary_metrics['mean_nrmse_pct']:.2f}%")
-        print(f" Time:  {summary_metrics['avg_training_time_s']:.2f} s / fold")
+        print(f" Inference: {summary_metrics['avg_inference_time_ms']:.3f} ms / sample (Train: {summary_metrics['avg_training_time_s']:.2f} s / fold)")
         print(f" Saved Model: {model_save_path}")
         print(f" Saved CSVs:  {results_dir}/ ({model_name}_{cv_strategy}_*.csv)")
         print(f"========================================================================\n")
@@ -569,7 +576,7 @@ def main():
             "MSE": f"{res['mean_mse']:,.2f} ± {res['std_mse']:,.2f}",
             "RMSE": f"{res['mean_rmse']:.2f} ± {res['std_rmse']:.2f}",
             "R2": f"{res['mean_r2']:.4f} ± {res['std_r2']:.4f}",
-            "Time (s)": f"{res['avg_training_time_s']:.2f}"
+            "Inference (ms)": f"{res.get('avg_inference_time_ms', 0.0):.3f}"
         })
 
     print("\n\n==================== CONTROLLED 11-MODEL BENCHMARK TABLE ====================")
