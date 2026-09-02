@@ -46,6 +46,7 @@ from src.dataset import (
     TARGET_NAME
 )
 from src.models import build_model, MODEL_REGISTRY
+from src.export_results import compute_comprehensive_metrics, export_cross_validation_csvs
 
 
 def set_seed(seed: int = 42):
@@ -58,11 +59,7 @@ def set_seed(seed: int = 42):
 
 def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     """Compute standard regression metrics matching paper Table 2 and Table 3."""
-    mae = float(mean_absolute_error(y_true, y_pred))
-    mse = float(mean_squared_error(y_true, y_pred))
-    rmse = float(np.sqrt(mse))
-    r2 = float(r2_score(y_true, y_pred)) if len(y_true) > 1 else 0.0
-    return {"mae": mae, "mse": mse, "rmse": rmse, "r2": r2}
+    return compute_comprehensive_metrics(y_true, y_pred)
 
 
 def prepare_fold_data(
@@ -249,6 +246,7 @@ def run_cross_validation(
     lr: float = 1e-3,
     csv_path: str = "dataset.csv",
     save_model_dir: str = "model",
+    results_dir: str = "results",
     seed: int = 42,
     device: Optional[str] = None,
     config_path: Optional[str] = None
@@ -299,6 +297,7 @@ def run_cross_validation(
     mlflow.set_experiment("Solar_Radiation_Prediction")
 
     fold_metrics_list = []
+    fold_predictions_list = []
     all_y_true = []
     all_y_pred = []
     total_training_time = 0.0
@@ -402,6 +401,7 @@ def run_cross_validation(
                 fitted_model = model
 
             fold_metrics_list.append(metrics)
+            fold_predictions_list.append(y_pred)
             all_y_true.extend(y_test_raw)
             all_y_pred.extend(y_pred)
             total_training_time += fold_time
@@ -416,6 +416,7 @@ def run_cross_validation(
             mlflow.log_metric(f"fold_{fold_idx+1}_mae", metrics["mae"])
             mlflow.log_metric(f"fold_{fold_idx+1}_rmse", metrics["rmse"])
             mlflow.log_metric(f"fold_{fold_idx+1}_r2", metrics["r2"])
+            mlflow.log_metric(f"fold_{fold_idx+1}_mbe", metrics.get("mbe", 0.0))
 
             if (fold_idx + 1) % 5 == 0 or (fold_idx + 1) == num_folds:
                 print(f"  --> {fold_desc} | MAE: {metrics['mae']:.2f} | RMSE: {metrics['rmse']:.2f} | R²: {metrics['r2']:.4f}")
@@ -425,6 +426,9 @@ def run_cross_validation(
         mses = [m["mse"] for m in fold_metrics_list]
         rmses = [m["rmse"] for m in fold_metrics_list]
         r2s = [m["r2"] for m in fold_metrics_list]
+        mbes = [m.get("mbe", 0.0) for m in fold_metrics_list]
+        nmaes = [m.get("nmae_pct", 0.0) for m in fold_metrics_list]
+        nrmses = [m.get("nrmse_pct", 0.0) for m in fold_metrics_list]
 
         summary_metrics = {
             "mean_mae": float(np.mean(maes)),
@@ -435,6 +439,12 @@ def run_cross_validation(
             "std_rmse": float(np.std(rmses)),
             "mean_r2": float(np.mean(r2s)),
             "std_r2": float(np.std(r2s)),
+            "mean_mbe": float(np.mean(mbes)),
+            "std_mbe": float(np.std(mbes)),
+            "mean_nmae_pct": float(np.mean(nmaes)),
+            "std_nmae_pct": float(np.std(nmaes)),
+            "mean_nrmse_pct": float(np.mean(nrmses)),
+            "std_nrmse_pct": float(np.std(nrmses)),
             "avg_training_time_s": float(total_training_time / num_folds),
             "total_training_time_s": float(total_training_time)
         }
@@ -443,7 +453,23 @@ def run_cross_validation(
         for k, v in summary_metrics.items():
             mlflow.log_metric(k, v)
 
-        # 3. Generate & Log Figures/Plots as Artifacts
+        # 3. Export Comprehensive CSV Files (Samples, Folds, Stations, Benchmark)
+        csv_paths = export_cross_validation_csvs(
+            df=df,
+            fold_splits=splits,
+            fold_predictions_list=fold_predictions_list,
+            fold_metrics_list=fold_metrics_list,
+            model_name=model_name,
+            cv_strategy=cv_strategy,
+            results_dir=results_dir,
+            target_col=TARGET_NAME
+        )
+
+        for csv_key, csv_path in csv_paths.items():
+            if os.path.exists(csv_path):
+                mlflow.log_artifact(csv_path, artifact_path="results_csv")
+
+        # 4. Generate & Log Figures/Plots as Artifacts
         with tempfile.TemporaryDirectory() as tmp_dir:
             plot_dict = generate_evaluation_plots(
                 np.array(all_y_true), np.array(all_y_pred), model_name, tmp_dir
@@ -468,16 +494,17 @@ def run_cross_validation(
                 mlflow.log_artifact(model_save_path, artifact_path="checkpoints")
                 mlflow.log_artifact(scaler_save_path, artifact_path="checkpoints")
 
-            # Checkpoint and scalers already logged via mlflow.log_artifact above
-
         # Print Benchmark Table matching Paper Format
         print(f"\n==================== RESULTS: {model_name.upper()} ({cv_name}) ====================")
-        print(f" MAE:  {summary_metrics['mean_mae']:.2f} ± {summary_metrics['std_mae']:.2f}")
-        print(f" MSE:  {summary_metrics['mean_mse']:,.2f} ± {summary_metrics['std_mse']:,.2f}")
-        print(f" RMSE: {summary_metrics['mean_rmse']:.2f} ± {summary_metrics['std_rmse']:.2f}")
-        print(f" R²:   {summary_metrics['mean_r2']:.4f} ± {summary_metrics['std_r2']:.4f}")
-        print(f" Time: {summary_metrics['avg_training_time_s']:.2f} s / fold")
+        print(f" MAE:   {summary_metrics['mean_mae']:.2f} ± {summary_metrics['std_mae']:.2f} Wh/m²")
+        print(f" MSE:   {summary_metrics['mean_mse']:,.2f} ± {summary_metrics['std_mse']:,.2f}")
+        print(f" RMSE:  {summary_metrics['mean_rmse']:.2f} ± {summary_metrics['std_rmse']:.2f} Wh/m²")
+        print(f" R²:    {summary_metrics['mean_r2']:.4f} ± {summary_metrics['std_r2']:.4f}")
+        print(f" MBE:   {summary_metrics['mean_mbe']:.2f} ± {summary_metrics['std_mbe']:.2f} Wh/m²")
+        print(f" nMAE:  {summary_metrics['mean_nmae_pct']:.2f}% | nRMSE: {summary_metrics['mean_nrmse_pct']:.2f}%")
+        print(f" Time:  {summary_metrics['avg_training_time_s']:.2f} s / fold")
         print(f" Saved Model: {model_save_path}")
+        print(f" Saved CSVs:  {results_dir}/ ({model_name}_{cv_strategy}_*.csv)")
         print(f"========================================================================\n")
 
     return summary_metrics
@@ -506,6 +533,7 @@ def main():
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cpu' or 'cuda')")
     parser.add_argument("--config", type=str, default=None, help="Path to tuned JSON configuration file")
     parser.add_argument("--dataset", type=str, default="dataset.csv", help="Path to dataset.csv")
+    parser.add_argument("--results-dir", type=str, default="results", help="Directory to save CSV result files")
 
     args = parser.parse_args()
 
@@ -530,6 +558,7 @@ def main():
             batch_size=args.batch_size,
             lr=args.lr,
             csv_path=args.dataset,
+            results_dir=args.results_dir,
             seed=args.seed,
             device=args.device,
             config_path=args.config

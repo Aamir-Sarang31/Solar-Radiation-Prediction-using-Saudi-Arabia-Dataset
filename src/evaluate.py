@@ -194,6 +194,25 @@ def generate_publication_table(output_format: str = "markdown") -> str:
     return df.to_markdown(index=False)
 
 
+def export_paper_baseline_table(output_csv: str = "results/paper_baselines.csv") -> str:
+    """Export published paper baseline values to CSV for rigorous research comparison."""
+    os.makedirs(os.path.dirname(output_csv) or ".", exist_ok=True)
+    paper_baselines = [
+        {"Rank": 1, "Model": "Linear Regression (LR)", "Category": "Classical", "MAE": "135.94 ± 12.05", "MSE": "39,990.28 ± 23,383.73", "RMSE": "193.74 ± 49.53", "R2": "0.97 ± 0.02", "Time_s": 0.01},
+        {"Rank": 2, "Model": "Histogram GB (HGB)", "Category": "Ensemble", "MAE": "140.58 ± 19.82", "MSE": "37,838.14 ± 12,478.65", "RMSE": "192.11 ± 30.54", "R2": "0.98 ± 0.01", "Time_s": 0.83},
+        {"Rank": 3, "Model": "Extreme GB (XGBoost)", "Category": "Ensemble", "MAE": "148.37 ± 15.82", "MSE": "39,799.31 ± 10,099.30", "RMSE": "198.05 ± 23.95", "R2": "0.97 ± 0.01", "Time_s": 2.73},
+        {"Rank": 4, "Model": "Artificial Neural Net (ANN)", "Category": "Neural", "MAE": "154.40 ± 15.51", "MSE": "61,990.12 ± 36,218.44", "RMSE": "241.22 ± 61.66", "R2": "0.96 ± 0.03", "Time_s": 10.60},
+        {"Rank": 5, "Model": "Random Forest (RF)", "Category": "Ensemble", "MAE": "167.80 ± 24.33", "MSE": "53,770.46 ± 16,650.72", "RMSE": "229.34 ± 34.25", "R2": "0.97 ± 0.01", "Time_s": 1.64},
+        {"Rank": 6, "Model": "Support Vector Reg (SVR)", "Category": "Classical", "MAE": "261.08 ± 29.11", "MSE": "136,016.45 ± 30,990.75", "RMSE": "366.19 ± 43.80", "R2": "0.91 ± 0.02", "Time_s": 0.44},
+        {"Rank": 7, "Model": "Decision Tree (DT)", "Category": "Classical", "MAE": "308.38 ± 31.22", "MSE": "201,805.76 ± 52,940.32", "RMSE": "445.55 ± 57.40", "R2": "0.87 ± 0.03", "Time_s": 0.02},
+        {"Rank": 8, "Model": "K-Nearest Neighbors (KNN)", "Category": "Classical", "MAE": "355.15 ± 31.12", "MSE": "215,790.97 ± 41,848.70", "RMSE": "462.37 ± 44.76", "R2": "0.86 ± 0.03", "Time_s": 0.00}
+    ]
+    df = pd.DataFrame(paper_baselines)
+    df.to_csv(output_csv, index=False)
+    print(f" [OK] Exported paper baseline table to: {output_csv}")
+    return output_csv
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate and gate models via MLflow")
     parser.add_argument("--gate", action="store_true", help="Run MLflow Registry promotion gate")
@@ -205,8 +224,13 @@ def main():
     parser.add_argument("--scaler", type=str, default="model/transformer_scaler.pkl", help="Path to scaler")
     parser.add_argument("--dry-run", action="store_true", help="Validate promotion gate without overwriting production export")
     parser.add_argument("--report", action="store_true", help="Print benchmark comparison table")
+    parser.add_argument("--export-csv", action="store_true", help="Export benchmark table to CSV")
+    parser.add_argument("--output-csv", type=str, default="results/paper_baselines.csv", help="CSV path for export")
 
     args = parser.parse_args()
+
+    if args.export_csv:
+        export_paper_baseline_table(args.output_csv)
 
     if args.report:
         print("\n" + generate_publication_table() + "\n")

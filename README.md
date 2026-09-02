@@ -245,6 +245,7 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │   ├── train.py                   # MLflow-integrated training pipeline (10-Fold & LOSO CV)
 │   ├── tune.py                    # RandomizedSearchCV hyperparameter optimization module
 │   ├── evaluate.py                # MLflow Model Registry promotion gate
+│   ├── export_results.py          # Granular CSV results exporter (samples, folds, stations)
 │   ├── predict.py                 # SolarPredictor inference API
 │   └── models/
 │       ├── __init__.py            # MODEL_REGISTRY & build_model() factory
@@ -252,12 +253,20 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │       ├── lstm.py                # Solar LSTM architecture
 │       └── cnn1d.py               # Solar 1D CNN architecture
 │
-├── tests/                         # Test suite (41 tests)
+├── results/                       # Granular, publication-ready research CSV exports
+│   ├── benchmark_summary.csv      # Cross-model master comparison summary
+│   ├── paper_baselines.csv        # Published 8-model baseline results
+│   ├── *_samples.csv              # Per-observation out-of-fold predictions & residuals
+│   ├── *_folds.csv                # Per-fold performance metrics (MAE, RMSE, R², MBE)
+│   └── *_stations.csv             # Station-by-station spatial metrics (all 43 stations)
+│
+├── tests/                         # Test suite (45 tests)
 │   ├── __init__.py
 │   ├── test_api.py                # Flask API endpoint tests
 │   ├── test_models.py             # Forward/backward pass tests for all DL models
 │   ├── test_preprocessing.py      # Dataset loading, CV split, and scaling tests
 │   ├── test_registry_gate.py      # MLflow promotion gate tests
+│   ├── test_results_export.py     # Results export & metrics calculation tests
 │   └── test_tuning.py             # RandomizedSearchCV search space & tuning smoke tests
 │
 ├── configs/                       # Tuned hyperparameter configurations (JSON)
@@ -419,7 +428,7 @@ Triggers on every push and pull request to `main`/`master`:
 1. **Checkout** → Set up Python 3.11
 2. **Install Dependencies** → PyTorch (CPU) + `requirements-dev.txt` (MLflow, DVC, scipy, pytest, flake8)
 3. **Code Quality** → Flake8 linting (syntax errors, undefined names)
-4. **Test Suite** → `pytest tests/ -v` (41 tests)
+4. **Test Suite** → `pytest tests/ -v` (45 tests)
 5. **Smoke Training** → 3-epoch FT-Transformer training with MLflow tracking
 6. **Promotion Gate** → MLflow Registry quality threshold verification (`--dry-run` on PRs, full export on `main`)
 
@@ -434,7 +443,7 @@ Triggers automatically on push to `main`/`master`:
 
 ## 🧪 Testing
 
-The project includes **41 automated tests** across 5 test modules:
+The project includes **45 automated tests** across 6 test modules:
 
 | Module | Tests | Coverage |
 |---|:---:|---|
@@ -442,6 +451,7 @@ The project includes **41 automated tests** across 5 test modules:
 | `test_models.py` | 7 | Forward pass, backward pass gradients, single-sample inference for all DL models |
 | `test_preprocessing.py` | 5 | Feature list completeness, dataset loading, 10-Fold/LOSO splits, scaling |
 | `test_registry_gate.py` | 3 | Promotion thresholds, acceptance criteria, MLflow retrieval |
+| `test_results_export.py` | 4 | Research CSV results export, schema validation, extended metrics (MBE, NMAE, NRMSE) |
 | `test_tuning.py` | 19 | RandomizedSearchCV distributions, sampling (8 models), device detection, classical/DL smoke tuning |
 
 ```bash
