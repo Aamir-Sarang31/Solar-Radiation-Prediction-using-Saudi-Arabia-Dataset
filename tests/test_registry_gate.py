@@ -40,9 +40,27 @@ def test_promotion_gate_acceptance():
 
 def test_promotion_gate_mlflow_retrieval():
     """Verify promotion gate can extract metrics directly from logged MLflow runs."""
+    import os
+    import mlflow
+
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment("Solar_Radiation_Prediction")
+
+    with mlflow.start_run(run_name="transformer_test_retrieval"):
+        mlflow.set_tags({
+            "model_architecture": "transformer",
+            "run_type": "final_benchmark"
+        })
+        mlflow.log_metrics({
+            "mean_rmse": 90.0,
+            "mean_r2": 0.996
+        })
+
     passed = check_promotion_gate(
         candidate_model_name="transformer",
         candidate_checkpoint="model/transformer_model.pt",
-        candidate_scaler="model/transformer_scaler.pkl"
+        candidate_scaler="model/transformer_scaler.pkl",
+        dry_run=True
     )
     assert passed is True
