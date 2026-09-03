@@ -12,36 +12,41 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5 -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
     <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     
-    <!-- Clean Stylesheet -->
+    <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="/static/style.css">
     
-    <!-- Scripts -->
+    <!-- Libraries -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Heatmap Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 
 <body>
-    <div class="container-fluid px-lg-5">
-        <h1 class="main-header">Saudi Arabia Solar Radiation Prediction</h1>
-        <p class="sub-header">Prepared by 
-            <a href="https://github.com/nishnarudkar" target="_blank">Nishant Narudkar</a>, 
-            <a href="https://github.com/Vatsal211005" target="_blank">Vatsal Parmar</a>, 
-            <a href="https://github.com/Metzo64" target="_blank">Maitreya Pawar</a>, 
-            <a href="https://github.com/Aamir-Sarang31" target="_blank">Aamir Sarang</a>
-        </p>
+    <div class="container py-4">
+        <!-- Header Section -->
+        <header class="text-center mb-4">
+            <h1 class="main-title">Saudi Arabia Solar Radiation Prediction</h1>
+            <p class="subtitle">Prepared by 
+                <a href="https://github.com/Aamir-Sarang31" target="_blank" class="author-link">Aamir Sarang</a>, 
+                <a href="https://github.com/nishant-narudkar" target="_blank" class="author-link">Nishant Narudkar</a>, 
+                <a href="https://github.com/MaitreyaPawar" target="_blank" class="author-link">Maitreya Pawar</a>, 
+                <a href="https://github.com/vatsal-parmar" target="_blank" class="author-link">Vatsal Parmar</a>
+            </p>
+        </header>
 
         <!-- Navigation Tabs -->
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+        <ul class="nav nav-tabs justify-content-start mb-4" id="mainTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapView" type="button" role="tab">Map View</button>
             </li>
@@ -60,11 +65,20 @@
                 <div class="row g-4">
                     <div class="col-lg-8">
                         <button id="toggleHeatmap" class="toggle-btn">Toggle Gradient View</button>
-                        <div id="map"></div>
+                        <div class="map-wrapper position-relative">
+                            <div id="map"></div>
+                            <!-- On-Map Floating Toggle Control -->
+                            <div class="map-overlay-controls">
+                                <div class="btn-group btn-group-sm map-toggle-group" role="group">
+                                    <button type="button" class="btn btn-map-mode active" id="btnModePins">Normal Map</button>
+                                    <button type="button" class="btn btn-map-mode" id="btnModeHeatmap">Gradient View</button>
+                                </div>
+                            </div>
+                        </div>
                         <div id="mapStatus" class="map-status"></div>
                     </div>
                     <div class="col-lg-4 ps-lg-4">
-                        <div class="station-details-title">Station Details</div>
+                        <h3 class="section-title">Station Details</h3>
                         <div class="mb-3">
                             <label class="form-label-custom" for="stationSelect">Select Station:</label>
                             <select id="stationSelect" class="form-select"></select>
@@ -80,7 +94,7 @@
                 <!-- Monthly Resource Data Section -->
                 <div class="row mt-4 pt-2">
                     <div class="col-12">
-                        <h4 style="font-size: 1.25rem; font-weight: 600; color: #333; margin-bottom: 1rem;">Monthly Resource Data</h4>
+                        <h4 class="section-title" style="font-size: 1.25rem;">Monthly Resource Data</h4>
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label-custom" for="parameterSelect">Select Parameters:</label>
@@ -98,14 +112,21 @@
                                 </select>
                             </div>
                         </div>
-                        <div id="monthlyChart" style="height: 400px; width: 100%;"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">Scale Mode:</span>
+                            <div class="btn-group btn-group-sm" role="group" id="monthlyScaleToggle">
+                                <button type="button" class="btn btn-scale active" id="btnMonthlyStandard">Standard Values</button>
+                                <button type="button" class="btn btn-scale" id="btnMonthlyNormalized">Normalized (0–100%)</button>
+                            </div>
+                        </div>
+                        <div id="monthlyChart" style="height: 420px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
 
             <!-- TAB 2: Station Comparison -->
             <div class="tab-pane fade" id="stationComparison" role="tabpanel">
-                <h3 style="font-size: 1.4rem; font-weight: 600; color: #333; margin-bottom: 1.25rem;">Station Comparison</h3>
+                <h3 class="section-title">Station Comparison</h3>
                 <div class="row g-3 mb-3">
                     <div class="col-md-5">
                         <label class="form-label-custom" for="compareStations">Select Stations:</label>
@@ -128,10 +149,18 @@
                     </div>
                 </div>
 
-                <div id="comparisonChart" style="height: 420px; width: 100%; margin-top: 15px;"></div>
+                <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+                    <span class="text-muted small">Scale Mode:</span>
+                    <div class="btn-group btn-group-sm" role="group" id="comparisonScaleToggle">
+                        <button type="button" class="btn btn-scale active" id="btnCompareStandard">Standard Values</button>
+                        <button type="button" class="btn btn-scale" id="btnCompareNormalized">Normalized (0–100%)</button>
+                    </div>
+                </div>
+
+                <div id="comparisonChart" style="height: 420px; width: 100%;"></div>
 
                 <div class="summary-table-container">
-                    <h4 style="font-size: 1.2rem; font-weight: 600; color: #333; margin-bottom: 1rem;">Summary Statistics (GHI)</h4>
+                    <h4 class="section-title" style="font-size: 1.2rem;">Summary Statistics (GHI)</h4>
                     <div class="table-responsive">
                         <table class="summary-table" id="comparisonTable">
                             <thead>
@@ -151,21 +180,10 @@
                 </div>
             </div>
 
-            <!-- TAB 3: Prediction -->
+            <!-- TAB 3: Prediction (Option A: Strict Screenshot Match) -->
             <div class="tab-pane fade" id="prediction" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 style="font-size: 1.4rem; font-weight: 600; color: #333; margin-bottom: 0;">GHI Prediction</h3>
-                    <div class="d-flex align-items-center gap-2">
-                        <label for="predictModelType" class="form-label-custom mb-0" style="white-space: nowrap;">Model:</label>
-                        <select id="predictModelType" class="form-select" style="min-width: 220px;">
-                            <option value="transformer" selected>FT-Transformer (Ours - Best)</option>
-                            <option value="ann">Artificial Neural Network (ANN)</option>
-                            <option value="linear_regression">Linear Regression</option>
-                            <option value="lstm">Solar LSTM</option>
-                            <option value="cnn1d">Solar 1D CNN</option>
-                        </select>
-                    </div>
-                </div>
+                <h3 class="section-title mb-3">GHI Prediction</h3>
+                <input type="hidden" id="predictModelType" value="production">
 
                 <form id="predictionForm">
                     <div class="row g-3">
@@ -173,119 +191,119 @@
                         <div class="col-md-4">
                             <label class="form-label-custom">Air Temperature (°C):</label>
                             <input type="number" step="any" class="form-control" name="Air Temperature (C°)" id="f_temp">
-                            <div class="range-text">Range: 8.10 - 38.70 °C</div>
+                            <div class="range-text" id="r_temp">Range: 8.10 - 38.70 °C</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Air Temp Uncertainty (°C):</label>
                             <input type="number" step="any" class="form-control" name="Air Temperature Uncertainty (C°)" id="f_temp_unc">
-                            <div class="range-text">Range: 0.50 - 0.60 °C</div>
+                            <div class="range-text" id="r_temp_unc">Range: 0.50 - 0.60 °C</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Wind Direction (°N):</label>
                             <input type="number" step="any" class="form-control" name="Wind Direction at 3m (°N)" id="f_wind_dir">
-                            <div class="range-text">Range: 0.00 - 359.00 °N</div>
+                            <div class="range-text" id="r_wind_dir">Range: 0.00 - 359.00 °N</div>
                         </div>
 
                         <!-- Row 2 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Wind Direction Uncertainty (°N):</label>
                             <input type="number" step="any" class="form-control" name="Wind Direction at 3m Uncertainty (°N)" id="f_wind_dir_unc">
-                            <div class="range-text">Range: 0.00 - 4.80 °N</div>
+                            <div class="range-text" id="r_wind_dir_unc">Range: 0.00 - 4.80 °N</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Wind Speed at 3m (m/s):</label>
                             <input type="number" step="any" class="form-control" name="Wind Speed at 3m (m/s)" id="f_wind_spd">
-                            <div class="range-text">Range: 0.00 - 7.80 m/s</div>
+                            <div class="range-text" id="r_wind_spd">Range: 0.00 - 7.80 m/s</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Wind Speed Uncertainty (m/s):</label>
                             <input type="number" step="any" class="form-control" name="Wind Speed at 3m Uncertainty (m/s)" id="f_wind_spd_unc">
-                            <div class="range-text">Range: 0.00 - 0.10 m/s</div>
+                            <div class="range-text" id="r_wind_spd_unc">Range: 0.00 - 0.10 m/s</div>
                         </div>
 
                         <!-- Row 3 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Wind Speed Std Dev (m/s):</label>
                             <input type="number" step="any" class="form-control" name="Wind Speed at 3m (std dev) (m/s)" id="f_wind_std">
-                            <div class="range-text">Range: 0.00 - 4.50 m/s</div>
+                            <div class="range-text" id="r_wind_std">Range: 0.00 - 4.50 m/s</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">DHI (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="DHI (Wh/m2)" id="f_dhi">
-                            <div class="range-text">Range: 865.80 - 6394.60 Wh/m²</div>
+                            <div class="range-text" id="r_dhi">Range: 865.80 - 6394.60 Wh/m²</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">DHI Uncertainty (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="DHI Uncertainty (Wh/m2)" id="f_dhi_unc">
-                            <div class="range-text">Range: 37.30 - 1344.60 Wh/m²</div>
+                            <div class="range-text" id="r_dhi_unc">Range: 37.30 - 1344.60 Wh/m²</div>
                         </div>
 
                         <!-- Row 4 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Standard Deviation DHI (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="Standard Deviation DHI (Wh/m2)" id="f_std_dhi">
-                            <div class="range-text">Range: 145.30 - 1648.50 Wh/m²</div>
+                            <div class="range-text" id="r_std_dhi">Range: 145.30 - 1648.50 Wh/m²</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">DNI (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="DNI (Wh/m2)" id="f_dni">
-                            <div class="range-text">Range: 0.30 - 9517.00 Wh/m²</div>
+                            <div class="range-text" id="r_dni">Range: 0.30 - 9517.00 Wh/m²</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">DNI Uncertainty (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="DNI Uncertainty (Wh/m2)" id="f_dni_unc">
-                            <div class="range-text">Range: 0.20 - 2115.50 Wh/m²</div>
+                            <div class="range-text" id="r_dni_unc">Range: 0.20 - 2115.50 Wh/m²</div>
                         </div>
 
                         <!-- Row 5 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Standard Deviation DNI (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="Standard Deviation DNI (Wh/m2)" id="f_std_dni">
-                            <div class="range-text">Range: 0.40 - 3282.20 Wh/m²</div>
+                            <div class="range-text" id="r_std_dni">Range: 0.40 - 3282.20 Wh/m²</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">GHI Uncertainty (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="GHI Uncertainty (Wh/m2)" id="f_ghi_unc">
-                            <div class="range-text">Range: 98.40 - 5249.60 Wh/m²</div>
+                            <div class="range-text" id="r_ghi_unc">Range: 98.40 - 5249.60 Wh/m²</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Standard Deviation GHI (Wh/m²):</label>
                             <input type="number" step="any" class="form-control" name="Standard Deviation GHI (Wh/m2)" id="f_std_ghi">
-                            <div class="range-text">Range: 117.60 - 1720.70 Wh/m²</div>
+                            <div class="range-text" id="r_std_ghi">Range: 117.50 - 1720.70 Wh/m²</div>
                         </div>
 
                         <!-- Row 6 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Peak Wind Speed at 3m (m/s):</label>
                             <input type="number" step="any" class="form-control" name="Peak Wind Speed at 3m (m/s)" id="f_peak_wind">
-                            <div class="range-text">Range: 0.00 - 40.50 m/s</div>
+                            <div class="range-text" id="r_peak_wind">Range: 0.00 - 40.50 m/s</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Peak Wind Speed Uncertainty (m/s):</label>
                             <input type="number" step="any" class="form-control" name="Peak Wind Speed at 3m Uncertainty (m/s)" id="f_peak_wind_unc">
-                            <div class="range-text">Range: 0.00 - 0.20 m/s</div>
+                            <div class="range-text" id="r_peak_wind_unc">Range: 0.00 - 0.20 m/s</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Relative Humidity (%):</label>
                             <input type="number" step="any" class="form-control" name="Relative Humidity (%)" id="f_hum">
-                            <div class="range-text">Range: 8.30 - 95.00 %</div>
+                            <div class="range-text" id="r_hum">Range: 8.30 - 95.90 %</div>
                         </div>
 
                         <!-- Row 7 -->
                         <div class="col-md-4">
                             <label class="form-label-custom">Relative Humidity Uncertainty (%):</label>
                             <input type="number" step="any" class="form-control" name="Relative Humidity Uncertainty (%)" id="f_hum_unc">
-                            <div class="range-text">Range: 2.80 - 3.70 %</div>
+                            <div class="range-text" id="r_hum_unc">Range: 2.80 - 3.70 %</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Barometric Pressure (hPa):</label>
                             <input type="number" step="any" class="form-control" name="Barometric Pressure (mB (hPa equiv))" id="f_pressure">
-                            <div class="range-text">Range: 831.30 - 1019.70 hPa</div>
+                            <div class="range-text" id="r_pressure">Range: 831.30 - 1019.70 hPa</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-custom">Barometric Pressure Uncertainty (hPa):</label>
                             <input type="number" step="any" class="form-control" name="Barometric Pressure Uncertainty (mB (hPa equiv))" id="f_pressure_unc">
-                            <div class="range-text">Range: 4.10 - 6.20 hPa</div>
+                            <div class="range-text" id="r_pressure_unc">Range: 4.10 - 6.20 hPa</div>
                         </div>
                     </div>
 
@@ -296,8 +314,8 @@
                 </form>
 
                 <!-- Prediction Result Box -->
-                <div id="predictionResult" class="prediction-alert mt-4" style="display: none;">
-                    Predicted GHI: <span id="predValueText" style="font-weight: 700;">5906.94</span> Wh/m²
+                <div id="predictionResult" class="prediction-alert mt-4">
+                    Predicted GHI: <span id="predValueText" style="font-weight: 700;">--</span> Wh/m²
                 </div>
             </div>
 

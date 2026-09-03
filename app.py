@@ -220,7 +220,8 @@ def station_comparison():
 def predict():
     try:
         input_data = request.json or {}
-        model_type = input_data.get("model_type", "linear_regression")
+        default_model = "production" if os.path.exists(os.path.join("model", "production_dl_model.pt")) else "linear_regression"
+        model_type = input_data.get("model_type") or default_model
 
         # Run inference using unified predictor
         prediction_val = predictor.predict(input_data, model_type=model_type)
