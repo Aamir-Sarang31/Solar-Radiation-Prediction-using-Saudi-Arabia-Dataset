@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPredictionDefaults();
 
     // 5. Setup Event Listeners
-    document.getElementById('toggleHeatmap').addEventListener('click', toggleGradientView);
+    document.getElementById('toggleHeatmap')?.addEventListener('click', toggleGradientView);
     document.getElementById('btnModePins')?.addEventListener('click', () => setMapMode('pins'));
     document.getElementById('btnModeHeatmap')?.addEventListener('click', () => setMapMode('heatmap'));
 
