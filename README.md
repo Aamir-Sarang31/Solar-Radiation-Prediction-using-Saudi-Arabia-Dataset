@@ -8,10 +8,12 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking%20%26%20Registry-0194E2.svg)](https://mlflow.org/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?logo=docker&logoColor=white)](Dockerfile)
 [![Flask](https://img.shields.io/badge/Flask-Web%20Dashboard-000000.svg?logo=flask&logoColor=white)](app.py)
-[![Render](https://img.shields.io/badge/Render-Cloud%20Deployment-46E3B7.svg?logo=render&logoColor=white)](render.yaml)
+[![Render](https://img.shields.io/badge/Render-Live%20Demo-46E3B7.svg?logo=render&logoColor=white)](https://solar-radiation-prediction-using-saudi.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Research Paper & Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling using Multi-Station Meteorological Observations across Saudi Arabia.
+> 
+> 🌐 **Live Web Application:** [https://solar-radiation-prediction-using-saudi.onrender.com](https://solar-radiation-prediction-using-saudi.onrender.com)
 
 ---
 
@@ -399,13 +401,16 @@ python src/evaluate.py --gate --model transformer \
 
 ### 5. Launch Web Application
 
-**Option A: Local Development (Flask)**
+**Option A: Instant Live Web App (Render Cloud)**
+- Access the live application directly in your browser: [https://solar-radiation-prediction-using-saudi.onrender.com](https://solar-radiation-prediction-using-saudi.onrender.com)
+
+**Option B: Local Development (Flask)**
 ```bash
 python app.py
 # Open http://localhost:5000
 ```
 
-**Option B: Containerized Deployment (Docker)**
+**Option C: Containerized Deployment (Docker)**
 ```bash
 # Build production Docker image
 docker build -t solar-radiation-prediction:latest .
@@ -426,7 +431,9 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 ## 🌐 Web Application & Deployment
 
-The repository includes a production-ready, interactive web dashboard and REST API built with **Flask**, **Leaflet.js**, **Plotly.js**, and **Bootstrap 5**, fully containerized via **Docker** and pre-configured for one-click cloud deployment on **Render.com**.
+The repository includes a production-ready, interactive web dashboard and REST API built with **Flask**, **Leaflet.js**, **Plotly.js**, and **Bootstrap 5**, fully containerized via **Docker** and deployed live on **Render.com**:
+
+🔗 **Live Web Application:** [https://solar-radiation-prediction-using-saudi.onrender.com](https://solar-radiation-prediction-using-saudi.onrender.com)
 
 ### 📸 Application Interface Showcase
 
@@ -515,6 +522,8 @@ services:
 2. Log in to [Render](https://dashboard.render.com/) and click **New +** → **Blueprint**.
 3. Select your repository; Render will automatically detect `render.yaml` and provision the containerized web service.
 4. Continuous Deployment: Any subsequent push to `main`/`master` triggers an automatic zero-downtime rebuild and deploy.
+
+> 🔗 **Production Deployment URL:** [https://solar-radiation-prediction-using-saudi.onrender.com](https://solar-radiation-prediction-using-saudi.onrender.com)
 
 #### 3. Production WSGI Server (Gunicorn / Waitress)
 
