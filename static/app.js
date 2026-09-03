@@ -72,10 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Initialize Map
     initMap();
 
-    // 2. Initialize Select2 Components
-    $('#parameterSelect').select2({ placeholder: "Select Parameters", width: '100%' });
-    $('#compareStations').select2({ placeholder: "Select Stations", width: '100%' });
-    $('#compareParams').select2({ placeholder: "Select Parameters", width: '100%' });
+    // 2. Initialize Select2 Components safely
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 === 'function') {
+        $('#parameterSelect').select2({ placeholder: "Select Parameters", width: '100%' });
+        $('#compareStations').select2({ placeholder: "Select Stations", width: '100%' });
+        $('#compareParams').select2({ placeholder: "Select Parameters", width: '100%' });
+    }
 
     // 3. Load Map, Station Data, and Dynamic Ranges
     loadMapAndStationData();
@@ -89,7 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnModeHeatmap')?.addEventListener('click', () => setMapMode('heatmap'));
 
     document.getElementById('stationSelect').addEventListener('change', (e) => onStationSelectChange(e.target.value));
-    $('#parameterSelect').on('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
+    if (typeof jQuery !== 'undefined') {
+        $('#parameterSelect').on('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
+    }
     document.getElementById('yearSelect').addEventListener('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
 
     // Comparison Event Listeners
@@ -164,16 +168,6 @@ function initMap() {
         attribution: '',
         maxZoom: 16
     }).addTo(map);
-
-    // Fetch dynamic thresholds for gradient view
-    fetch('/get-ghi-thresholds')
-        .then(res => res.json())
-        .then(data => {
-            if (data.low && data.high) {
-                ghiThresholds = data;
-            }
-        })
-        .catch(err => console.log("Using default GHI thresholds"));
 }
 
 // Invariant Solar Radiation Gradient Canvas Layer
