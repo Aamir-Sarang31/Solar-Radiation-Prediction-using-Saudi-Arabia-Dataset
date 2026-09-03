@@ -311,10 +311,11 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │   ├── style.css                  # Custom styling & responsive layouts
 │   └── app.js                     # Frontend interactive client & chart controllers
 ├── Screenshots/                   # Web application interface previews
-│   ├── homepage.jpg               # Interactive Station Map & overview
-│   ├── Station_comparison.jpg     # Multi-station comparison & GHI summary statistics
-│   ├── Predictions.jpg            # Real-time GHI prediction interface
-│   └── Features_comparison.jpg    # Monthly resource feature trends
+│   ├── homepage.png               # Interactive Station Map (Normal Pins View)
+│   ├── homepage_gradient.png      # Invariant Solar Radiation Gradient View
+│   ├── Station_comparison.png     # Multi-station comparison & GHI summary statistics
+│   ├── Features_comparison.png    # Monthly resource feature trends & scale normalization
+│   └── Predictions.png            # Real-time GHI prediction interface (FT-Transformer)
 │
 ├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
 ├── requirements.txt               # Production Python dependencies (Flask, PyTorch, sklearn)
@@ -429,15 +430,20 @@ The repository includes a production-ready, interactive web dashboard and REST A
 
 ### 📸 Application Interface Showcase
 
-| Interactive Station Map & Details | Multi-Station Comparison & GHI Statistics |
+| Interactive Station Map (Pins View) | Invariant Solar Gradient View |
 | :---: | :---: |
-| ![Homepage & Map View](Screenshots/homepage.jpg) | ![Station Comparison](Screenshots/Station_comparison.jpg) |
-| *Interactive 43-station map (CARTO Positron) with instant Gradient Heatmap toggle & station metadata* | *Multi-station comparison across 2017–2021 with dynamic scale normalization & GHI summary stats* |
+| ![Homepage & Map View](Screenshots/homepage.png) | ![Gradient Heatmap View](Screenshots/homepage_gradient.png) |
+| *Interactive 43-station map (CARTO Positron) with station inspector & metadata* | *Continuous spatial solar irradiance gradient heatmap overlay* |
 
-| Real-Time GHI Prediction Interface | Monthly Meteorological Feature Trends |
+| Multi-Station Comparison & GHI Statistics | Monthly Meteorological Feature Trends |
 | :---: | :---: |
-| ![GHI Prediction](Screenshots/Predictions.jpg) | ![Monthly Resource Data](Screenshots/Features_comparison.jpg) |
-| *Live 21-feature GHI inference with range indicators, dataset defaults, and champion DL model* | *Per-station multi-parameter time series with dual-scale visualization (Standard vs Normalized)* |
+| ![Station Comparison](Screenshots/Station_comparison.png) | ![Monthly Resource Data](Screenshots/Features_comparison.png) |
+| *Multi-station comparison across 2017–2021 with dynamic scale normalization & summary stats* | *Per-station multi-parameter time series with dual-scale visualization (Standard vs Normalized)* |
+
+| Real-Time GHI Prediction Interface |
+| :---: |
+| ![GHI Prediction](Screenshots/Predictions.png) |
+| *Live 21-feature GHI inference with range indicators, dataset defaults, and champion FT-Transformer* |
 
 ---
 
