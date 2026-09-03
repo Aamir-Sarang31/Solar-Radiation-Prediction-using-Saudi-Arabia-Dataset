@@ -23,33 +23,44 @@ body {
 }
 
 /* Main Headers */
-.main-header {
+.main-header,
+.main-title {
     color: var(--primary-color);
     text-align: center;
     margin-top: 1.5rem;
     margin-bottom: 0.35rem;
     font-size: 2.25rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    text-shadow: 1px 1px 3px rgba(30, 64, 175, 0.12);
 }
 
-.sub-header {
+.sub-header,
+.subtitle {
     color: var(--primary-color);
     text-align: center;
     font-size: 1rem;
     margin-bottom: 1.25rem;
-    font-weight: 400;
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
-.sub-header a {
+.subtitle .author-name,
+.sub-header .author-name {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sub-header a,
+.subtitle a {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s ease;
 }
 
-.sub-header a:hover {
+.sub-header a:hover,
+.subtitle a:hover {
     color: var(--primary-hover);
     text-decoration: underline;
 }

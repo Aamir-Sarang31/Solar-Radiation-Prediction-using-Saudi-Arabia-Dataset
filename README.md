@@ -6,6 +6,9 @@
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-RandomizedSearchCV-F7931E.svg)](https://scikit-learn.org/)
 [![DVC](https://img.shields.io/badge/DVC-Data%20%26%20Model%20Versioning-945DD6.svg)](https://dvc.org/)
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking%20%26%20Registry-0194E2.svg)](https://mlflow.org/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?logo=docker&logoColor=white)](Dockerfile)
+[![Flask](https://img.shields.io/badge/Flask-Web%20Dashboard-000000.svg?logo=flask&logoColor=white)](app.py)
+[![Render](https://img.shields.io/badge/Render-Cloud%20Deployment-46E3B7.svg?logo=render&logoColor=white)](render.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Research Paper & Project Context:** Solar Irradiance Forecasting & Renewable Energy Predictive Modeling using Multi-Station Meteorological Observations across Saudi Arabia.
@@ -23,7 +26,11 @@
 - [MLOps Pipeline](#-mlops-mlflow-experiment-tracking--registry-gating)
 - [Project Structure](#-project-structure)
 - [Quickstart Guide](#-quickstart-guide)
-- [Web Application](#-web-application)
+- [Web Application & Deployment](#-web-application--deployment)
+  - [Interface Showcase](#-application-interface-showcase)
+  - [Interactive Features](#-key-web-application-features)
+  - [Deployment Guides (Docker & Render)](#-deployment-architectures--guides)
+  - [REST API Reference](#-rest-api-endpoints)
 - [Dataset](#-dataset)
 - [CI/CD Pipeline](#-cicd-workflows)
 - [Testing](#-testing)
@@ -296,17 +303,24 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │
 ├── Other Models/                  # Legacy pre-trained classical models
 │
-├── app.py                         # Flask web application
-├── wsgi.py                        # WSGI entry point for production deployment
+├── app.py                         # Flask web application & REST API server
+├── wsgi.py                        # Production WSGI entry point (Gunicorn/Waitress)
 ├── templates/
-│   └── index.html                 # Web app frontend (Leaflet.js, Plotly.js)
+│   └── index.html                 # Web frontend UI (Bootstrap 5, Leaflet.js, Plotly.js)
 ├── static/
-│   └── app.js                     # Frontend JavaScript logic
+│   ├── style.css                  # Custom styling & responsive layouts
+│   └── app.js                     # Frontend interactive client & chart controllers
+├── Screenshots/                   # Web application interface previews
+│   ├── homepage.jpg               # Interactive Station Map & overview
+│   ├── Station_comparison.jpg     # Multi-station comparison & GHI summary statistics
+│   ├── Predictions.jpg            # Real-time GHI prediction interface
+│   └── Features_comparison.jpg    # Monthly resource feature trends
 │
 ├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
 ├── requirements.txt               # Production Python dependencies (Flask, PyTorch, sklearn)
 ├── requirements-dev.txt           # Development dependencies (MLflow, DVC, scipy, pytest)
-├── Dockerfile                     # Docker container configuration
+├── Dockerfile                     # Optimized production container (Python 3.11-slim, CPU PyTorch)
+├── render.yaml                    # Render.com Infrastructure-as-Code (IaC) deployment spec
 ├── .dockerignore                  # Docker build exclusions
 ├── .github/workflows/
 │   ├── ci.yml                     # Continuous Integration & MLflow promotion gate
@@ -384,8 +398,19 @@ python src/evaluate.py --gate --model transformer \
 
 ### 5. Launch Web Application
 
+**Option A: Local Development (Flask)**
 ```bash
 python app.py
+# Open http://localhost:5000
+```
+
+**Option B: Containerized Deployment (Docker)**
+```bash
+# Build production Docker image
+docker build -t solar-radiation-prediction:latest .
+
+# Run container locally
+docker run -d -p 5000:5000 --name solar-app solar-radiation-prediction:latest
 # Open http://localhost:5000
 ```
 
@@ -398,22 +423,169 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 ---
 
-## 🌐 Web Application
+## 🌐 Web Application & Deployment
 
-The Flask web application provides:
+The repository includes a production-ready, interactive web dashboard and REST API built with **Flask**, **Leaflet.js**, **Plotly.js**, and **Bootstrap 5**, fully containerized via **Docker** and pre-configured for one-click cloud deployment on **Render.com**.
 
-- **Interactive Leaflet.js Station Map**: Displays all 43 weather stations across Saudi Arabia with GHI heatmap overlays
-- **Multi-Model GHI Predictor**: Switch dynamically between Linear Regression, ANN, FT-Transformer, LSTM, and 1D CNN
-- **Station & Feature Comparisons**: Interactive Plotly.js visualizations
-- **Real-Time Predictions**: Input meteorological features and get instant GHI forecasts
+### 📸 Application Interface Showcase
+
+| Interactive Station Map & Details | Multi-Station Comparison & GHI Statistics |
+| :---: | :---: |
+| ![Homepage & Map View](Screenshots/homepage.jpg) | ![Station Comparison](Screenshots/Station_comparison.jpg) |
+| *Interactive 43-station map (CARTO Positron) with instant Gradient Heatmap toggle & station metadata* | *Multi-station comparison across 2017–2021 with dynamic scale normalization & GHI summary stats* |
+
+| Real-Time GHI Prediction Interface | Monthly Meteorological Feature Trends |
+| :---: | :---: |
+| ![GHI Prediction](Screenshots/Predictions.jpg) | ![Monthly Resource Data](Screenshots/Features_comparison.jpg) |
+| *Live 21-feature GHI inference with range indicators, dataset defaults, and champion DL model* | *Per-station multi-parameter time series with dual-scale visualization (Standard vs Normalized)* |
+
+---
+
+### ✨ Key Web Application Features
+
+1. **🗺️ Interactive Geographic Station Map**
+   - Renders all 43 monitoring stations across Saudi Arabia using high-performance Leaflet.js and clean CARTO Positron English tiles.
+   - **Normal vs Gradient Heatmap Toggle**: Switch instantaneously between individual pin markers with rich popup details and an invariant spatial solar irradiance gradient heatmap.
+   - **Station Inspector**: Selecting any station instantly retrieves its GPS coordinates, elevation, observation period, and historical averages.
+
+2. **📊 Monthly Resource Data & Scale Normalization**
+   - Multi-parameter time-series plotting powered by Plotly.js.
+   - Filter by station and year (2017–2021 or All Years aggregate).
+   - **Dual Scale Modes**:
+     - *Standard Values*: Visualizes exact physical quantities in native units (°C, m/s, Wh/m², hPa).
+     - *Normalized (0–100%)*: Min-max normalizes disparate metrics onto a unified vertical axis to clearly examine cross-parameter correlations (e.g. how humidity drops as temperature and DNI peak).
+
+3. **📈 Multi-Station Comparison & Statistical Benchmarks**
+   - Compare multiple stations side-by-side across any meteorological parameter.
+   - **Automated GHI Summary Statistics Table**: Dynamically calculates Mean, Minimum, Maximum, and Standard Deviation GHI for selected stations.
+
+4. **⚡ Real-Time GHI Prediction Engine**
+   - Accepts 21 meteorological features (temperatures, wind dynamics, diffuse/direct irradiance components, humidity, barometric pressure, and measurement uncertainties).
+   - **Real-Time Input Validation**: Displays valid operating ranges derived from national empirical observations.
+   - **"Load Default Values" Button**: One-click autofill with national dataset means for rapid demonstration.
+   - Powered by the production champion **FT-Transformer** model (`R² = 0.9919`, `MAE = 81.10 Wh/m²`), providing sub-millisecond inference.
+
+---
+
+### 🚢 Deployment Architectures & Guides
+
+#### 1. Containerized Deployment (Docker)
+
+The application includes an optimized, production-grade `Dockerfile` using `python:3.11-slim` with CPU-only PyTorch wheels to keep the image lightweight, secure, and fast to build.
 
 ```bash
-# Run locally
-python app.py
+# 1. Build the production Docker image
+docker build -t solar-radiation-prediction:latest .
 
-# Production deployment (Gunicorn / Waitress)
-gunicorn wsgi:app --bind 0.0.0.0:8000    # Linux/macOS
-waitress-serve --port=8000 wsgi:app       # Windows
+# 2. Run the container locally (mapped to port 5000)
+docker run -d -p 5000:5000 --name solar-app solar-radiation-prediction:latest
+
+# 3. Access the web interface
+# Open http://localhost:5000 in your browser
+```
+
+**Container Specifications:**
+- **Base Image:** `python:3.11-slim`
+- **WSGI Concurrency:** Gunicorn with 4 threads and dynamic port allocation (`${PORT:-5000}`)
+- **Built-in Healthcheck:** Periodically executes `curl -f http://localhost:5000/` every 30s
+- **Security & Caching:** Non-buffered stdout, bytecode caching disabled, build dependencies cleaned up
+
+#### 2. Cloud One-Click Deployment (Render Blueprint)
+
+The repository provides a native `render.yaml` Infrastructure-as-Code (IaC) configuration for seamless deployment to [Render.com](https://render.com):
+
+```yaml
+services:
+  - type: web
+    name: solar-radiation-prediction
+    env: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+```
+
+**How to Deploy to Render:**
+1. Push this repository to your GitHub account.
+2. Log in to [Render](https://dashboard.render.com/) and click **New +** → **Blueprint**.
+3. Select your repository; Render will automatically detect `render.yaml` and provision the containerized web service.
+4. Continuous Deployment: Any subsequent push to `main`/`master` triggers an automatic zero-downtime rebuild and deploy.
+
+#### 3. Production WSGI Server (Gunicorn / Waitress)
+
+For running in virtual environments or bare-metal servers:
+
+```bash
+# Linux / macOS (Gunicorn with 4 worker threads)
+gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 4 --timeout 120 wsgi:app
+
+# Windows (Waitress production WSGI server)
+pip install waitress
+waitress-serve --port=8000 wsgi:app
+```
+
+#### 4. Automated Continuous Deployment (GitHub Actions)
+
+The `.github/workflows/cd.yml` workflow triggers on every push to `main`/`master`:
+1. Tests the container build using Docker Buildx on Ubuntu runners.
+2. If `RENDER_DEPLOY_HOOK_URL` secret is configured in GitHub repository settings, triggers Render's instant deployment webhook.
+
+---
+
+### 🔌 REST API Endpoints
+
+The Flask backend exposes a clean JSON REST API:
+
+| Endpoint | Method | Description | Parameters / Payload |
+|---|:---:|---|---|
+| `/` | `GET` | Web UI Dashboard | None |
+| `/models` | `GET` | Available model identifiers | None |
+| `/map-data` | `GET` | Geo-coordinates & average GHI for all 43 stations | None |
+| `/get-station-names` | `GET` | List of all monitored station names | None |
+| `/station-details` | `GET` | Station metadata & monthly aggregated trends | `?station=<name>&year=<year>` |
+| `/data-analysis` | `GET` | Summary statistics (mean, min, max, std) for all features | None |
+| `/station-comparison` | `POST` | Multi-station time series & summary stats | `{"stations": [...], "params": [...], "year": "2020"}` |
+| `/predict` | `POST` | Execute real-time GHI inference | JSON payload with 21 features & optional `model_type` |
+| `/get-average-values` | `GET` | National mean values for all 21 input features | None |
+| `/get-ghi-thresholds` | `GET` | GHI 25th and 75th percentile classification bounds | None |
+
+#### Sample Prediction Request (`POST /predict`):
+
+```bash
+curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Air Temperature (C°)": 26.73,
+    "Air Temperature Uncertainty (C°)": 0.50,
+    "Wind Direction at 3m (°N)": 168.01,
+    "Wind Direction at 3m Uncertainty (°N)": 3.54,
+    "Wind Speed at 3m (m/s)": 2.60,
+    "Wind Speed at 3m Uncertainty (m/s)": 0.06,
+    "Wind Speed at 3m (std dev) (m/s)": 1.53,
+    "DHI (Wh/m2)": 2166.14,
+    "DHI Uncertainty (Wh/m2)": 387.05,
+    "Standard Deviation DHI (Wh/m2)": 593.40,
+    "DNI (Wh/m2)": 5587.29,
+    "DNI Uncertainty (Wh/m2)": 965.23,
+    "Standard Deviation DNI (Wh/m2)": 1747.42,
+    "GHI Uncertainty (Wh/m2)": 828.38,
+    "Standard Deviation GHI (Wh/m2)": 657.29,
+    "Peak Wind Speed at 3m (m/s)": 14.17,
+    "Peak Wind Speed at 3m Uncertainty (m/s)": 0.08,
+    "Relative Humidity (%)": 39.08,
+    "Relative Humidity Uncertainty (%)": 3.01,
+    "Barometric Pressure (mB (hPa equiv))": 953.54,
+    "Barometric Pressure Uncertainty (mB (hPa equiv))": 4.79,
+    "model_type": "production"
+  }'
+```
+
+**Response:**
+```json
+{
+  "model_used": "production",
+  "prediction": 5906.94,
+  "unit": "Wh/m2"
+}
 ```
 
 ---
@@ -478,10 +650,10 @@ python -m pytest tests/test_tuning.py -v
 
 ## 👥 Authors & Acknowledgements
 
-- **Aamir Sarang** ([@Aamir-Sarang31](https://github.com/Aamir-Sarang31))
-- **Nishant Narudkar** ([@nishnarudkar](https://github.com/nishnarudkar))
-- **Maitreya Pawar** ([@Metzo64](https://github.com/Metzo64))
-- **Vatsal Parmar** ([@Vatsal211005](https://github.com/Vatsal211005))
+- **Aamir Sarang**
+- **Nishant Narudkar**
+- **Maitreya Pawar**
+- **Vatsal Parmar**
 
 We express our sincere gratitude to **Mr. Pramod H. Kachare** and **Mr. Sandeep Sangle** for their valuable guidance and mentorship throughout this research project.
 
