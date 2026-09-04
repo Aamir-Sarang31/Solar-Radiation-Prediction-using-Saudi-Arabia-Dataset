@@ -67,8 +67,9 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 | **Data & Model Versioning (DVC)** | DVC tracking for `dataset.csv` and model weights with reproducible `dvc.yaml` pipelines |
 | **MLflow Experiment Tracking** | Every run logs parameters, metrics, plots, and model artifacts to SQLite |
 | **Model Registry Promotion Gate** | Automated quality gate blocks deployment if candidate fails RMSE/R² thresholds |
-| **43-Station LOSO Validation** | Spatial generalization testing across all Saudi Arabian weather stations |
-| **Interactive Web App** | Flask app with Leaflet.js station map, multi-model predictions, and Plotly visualizations |
+| **Interactive Web Dashboard** | Flask app with Leaflet.js map, multi-model predictions, and Plotly visualizations |
+| **Bright Neon Dark Mode** | Industry demo UI with sleek light/dark toggle, glowing HUD overlays, and persistent theme state |
+| **Precision Vector Gradient Map** | Hardware-accelerated Canvas clipping to 3,174-pt geoBoundaries ADM0 data with dynamic GHI beacon pins |
 | **CI/CD Integration** | GitHub Actions for linting, testing, smoke training, and promotion gate verification |
 
 ---
@@ -308,10 +309,11 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 ├── app.py                         # Flask web application & REST API server
 ├── wsgi.py                        # Production WSGI entry point (Gunicorn/Waitress)
 ├── templates/
-│   └── index.html                 # Web frontend UI (Bootstrap 5, Leaflet.js, Plotly.js)
+│   └── index.html                 # Web frontend UI (Bootstrap 5, Leaflet.js, Plotly.js, Theme Switch)
 ├── static/
-│   ├── style.css                  # Custom styling & responsive layouts
-│   └── app.js                     # Frontend interactive client & chart controllers
+│   ├── style.css                  # Bright Neon Dark Mode & Solar Light design system
+│   ├── app.js                     # Frontend interactive client, chart controllers & theme engine
+│   └── saudi_boundary.js          # High-precision geoBoundaries ADM0 vector boundary coordinates
 ├── Screenshots/                   # Web application interface previews
 │   ├── homepage.png               # Interactive Station Map (Normal Pins View)
 │   ├── homepage_gradient.png      # Invariant Solar Radiation Gradient View
@@ -456,26 +458,34 @@ The repository includes a production-ready, interactive web dashboard and REST A
 
 ### ✨ Key Web Application Features
 
-1. **🗺️ Interactive Geographic Station Map**
-   - Renders all 43 monitoring stations across Saudi Arabia using high-performance Leaflet.js and clean CARTO Positron English tiles.
-   - **Normal vs Gradient Heatmap Toggle**: Switch instantaneously between individual pin markers with rich popup details and an invariant spatial solar irradiance gradient heatmap.
-   - **Station Inspector**: Selecting any station instantly retrieves its GPS coordinates, elevation, observation period, and historical averages.
+1. **🌙 Bright Neon Dark Mode UI & Theme Switch**
+   - **Engineered for Industry Demos**: High-contrast, state-of-the-art dark theme utilizing a radial slate-black background (`#10192e` to `#080c14`), glowing neon cyan (`#00F0FF`) headings and active tabs, electric magenta (`#FF00E5`) accents, and glowing neon green (`#00FF9D`) prediction outputs.
+   - **Header Theme Toggle Switch**: Pill-shaped toggle switch with ☀️ Sun and 🌙 Moon icons, active status badge (`Neon Dark` / `Solar Light`), and automatic `localStorage` preference persistence.
+   - **Full Component Retheming**: Translucent glassmorphic cards, themed Select2 dropdowns, illuminated data tables, and high-visibility range indicators.
 
-2. **📊 Monthly Resource Data & Scale Normalization**
+2. **🗺️ Precision Geographic Station Map & Solar Gradient**
+   - **High-Precision Vector Clipping**: Uses official 3,174-point **geoBoundaries (ADM0)** vector coordinates covering both mainland Saudi Arabia and the Farasan Islands, hardware-clipped via 2D Canvas `ctx.clip()` with zero raster blur or international border bleeding.
+   - **Dynamic GHI Station Beacons**: In **Gradient View**, the 43 weather station pins transform into glowing, color-coded circular beacons reflecting each station's exact average GHI (green for lower irradiance, amber/yellow for mid-range, deep red for highest).
+   - **Dual Watermark-Free Basemaps**: Dynamically swaps between **Esri World Dark Gray Base + Reference** in Neon Dark Mode and **Esri World Light Gray Base + Reference** in Solar Light Mode, ensuring clean English geography without third-party watermarks.
+   - **Station Inspector**: Selecting any station pans smoothly and retrieves GPS coordinates, elevation, observation period, and historical averages.
+
+3. **📊 Dynamic Themed Time Series & Scale Normalization**
    - Multi-parameter time-series plotting powered by Plotly.js.
+   - **Theme-Aware Charts**: Automatically switches between dark transparent backgrounds with vibrant neon traces (`#00F0FF`, `#FF00E5`, `#39FF14`, `#FFD600`) and the clean light theme with solar cobalt colors upon toggling the theme switch.
    - Filter by station and year (2017–2021 or All Years aggregate).
    - **Dual Scale Modes**:
      - *Standard Values*: Visualizes exact physical quantities in native units (°C, m/s, Wh/m², hPa).
-     - *Normalized (0–100%)*: Min-max normalizes disparate metrics onto a unified vertical axis to clearly examine cross-parameter correlations (e.g. how humidity drops as temperature and DNI peak).
+     - *Normalized (0–100%)*: Min-max normalizes disparate metrics onto a unified vertical axis to clearly examine cross-parameter correlations.
 
-3. **📈 Multi-Station Comparison & Statistical Benchmarks**
-   - Compare multiple stations side-by-side across any meteorological parameter.
-   - **Automated GHI Summary Statistics Table**: Dynamically calculates Mean, Minimum, Maximum, and Standard Deviation GHI for selected stations.
+4. **📈 Multi-Station Comparison & Statistical Benchmarks**
+   - Compare multiple stations side-by-side across any meteorological parameter with dynamic splines.
+   - **Automated GHI Summary Statistics Table**: Dynamically calculates Mean, Minimum, Maximum, and Standard Deviation GHI for selected stations with themed table styling.
 
-4. **⚡ Real-Time GHI Prediction Engine**
+5. **⚡ Real-Time GHI Prediction Engine**
    - Accepts 21 meteorological features (temperatures, wind dynamics, diffuse/direct irradiance components, humidity, barometric pressure, and measurement uncertainties).
-   - **Real-Time Input Validation**: Displays valid operating ranges derived from national empirical observations.
-   - **"Load Default Values" Button**: One-click autofill with national dataset means for rapid demonstration.
+   - **Real-Time Input Validation**: Displays valid operating ranges derived from national empirical observations with high-contrast text.
+   - **"Load Default Values" Button**: Electric magenta action button for one-click autofill with national dataset means.
+   - **Glowing Prediction Result Box**: Displays predicted GHI with neon green glassmorphic banner and illuminated metrics.
    - Powered by the production champion **FT-Transformer** model (`R² = 0.9919`, `MAE = 81.10 Wh/m²`), providing sub-millisecond inference.
 
 ---
