@@ -19,6 +19,9 @@ def load_dataset():
         df = pd.read_csv("dataset.csv")
         df = clean_column_names(df)
         df['Date'] = pd.to_datetime(df['Date'], format='%d-%m-%Y %H:%M')
+        df['Year'] = df['Date'].dt.year
+        df['Month'] = df['Date'].dt.month
+        df['Date_str'] = df['Date'].dt.strftime('%Y-%m-%d')
         print(f"Loaded dataset with {len(df)} records and {df['Station_Name'].nunique()} stations")
         return df
     except Exception as e:
@@ -74,6 +77,14 @@ def map_data():
     return jsonify(map_data_list)
 
 
+@app.route('/stations')
+def stations():
+    if dataset is None:
+        return jsonify({"error": "No dataset loaded"}), 500
+
+    return jsonify({"stations": dataset['Station_Name'].unique().tolist()})
+
+
 @app.route('/get-station-names')
 def get_station_names():
     if dataset is None:
@@ -90,15 +101,13 @@ def station_details():
     if dataset is None:
         return jsonify({"error": "No dataset loaded"}), 500
 
-    numerical_cols = dataset.select_dtypes(include=[np.number]).columns.tolist()
-    exclude_cols = ['Latitude', 'Longitude']
-    numerical_cols = [col for col in numerical_cols if col not in exclude_cols]
+    numerical_cols = [c for c in dataset.select_dtypes(include=[np.number]).columns if c not in ['Latitude', 'Longitude', 'Year', 'Month']]
 
     station_data_full = dataset[dataset['Station_Name'] == station_name]
 
     if year_filter and year_filter.isdigit():
         year = int(year_filter)
-        station_data_filtered = station_data_full[station_data_full['Date'].dt.year == year]
+        station_data_filtered = station_data_full[station_data_full['Year'] == year]
         if station_data_filtered.empty:
             station_data_filtered = station_data_full
     else:
@@ -115,7 +124,7 @@ def station_details():
         "date": first_row['Date'].strftime('%Y-%m-%d %H:%M')
     }
 
-    monthly_data = station_data_filtered.groupby(station_data_filtered['Date'].dt.month)[numerical_cols].mean()
+    monthly_data = station_data_filtered.groupby('Month')[numerical_cols].mean()
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
     all_months = pd.DataFrame(index=range(1, 13))
@@ -143,9 +152,7 @@ def data_analysis():
     if dataset is None:
         return jsonify({"error": "No dataset loaded"}), 500
 
-    numerical_cols = dataset.select_dtypes(include=[np.number]).columns.tolist()
-    exclude_cols = ['Latitude', 'Longitude']
-    numerical_cols = [col for col in numerical_cols if col not in exclude_cols]
+    numerical_cols = [c for c in dataset.select_dtypes(include=[np.number]).columns if c not in ['Latitude', 'Longitude', 'Year', 'Month']]
 
     summary_stats = {}
     for col in numerical_cols:
@@ -173,41 +180,42 @@ def station_comparison():
 
     if year and str(year).isdigit():
         year_int = int(year)
-        filtered_data = filtered_data[filtered_data['Date'].dt.year == year_int]
+        filtered_data = filtered_data[filtered_data['Year'] == year_int]
 
     if filtered_data.empty:
         return jsonify({"error": "No data found for selected stations"}), 404
 
-    numerical_cols = dataset.select_dtypes(include=[np.number]).columns.tolist()
-    exclude_cols = ['Latitude', 'Longitude']
-    numerical_cols = [col for col in numerical_cols if col not in exclude_cols]
+    numerical_cols = [col for col in dataset.select_dtypes(include=[np.number]).columns if col not in ['Latitude', 'Longitude', 'Year', 'Month']]
 
     dates = {}
     values = {}
 
     for station in stations:
-        station_data = filtered_data[filtered_data['Station_Name'] == station]
-        if not station_data.empty:
-            dates[station] = station_data['Date'].dt.strftime('%Y-%m-%d').tolist()
+        st_df = filtered_data[filtered_data['Station_Name'] == station]
+        if not st_df.empty:
+            dates[station] = st_df['Date_str'].tolist()
+            values[station] = {
+                col: st_df[col].tolist()
+                for col in numerical_cols if col in st_df.columns
+            }
+        else:
+            dates[station] = []
             values[station] = {}
-            for param in numerical_cols:
-                if param in station_data.columns:
-                    values[station][param] = station_data[param].tolist()
-                else:
-                    values[station][param] = []
 
+    # Fast vectorized summary statistics calculation
+    agg_df = filtered_data.groupby('Station_Name')[numerical_cols].agg(['mean', 'min', 'max', 'std'])
     summary_stats = {}
-    for param in numerical_cols:
+    for col in numerical_cols:
         for stat in ['mean', 'min', 'max', 'std']:
-            key = f"{param}_{stat}"
-            summary_stats[key] = {}
-            for station in stations:
-                station_data = filtered_data[filtered_data['Station_Name'] == station]
-                if not station_data.empty and param in station_data.columns:
-                    value = station_data[param].agg(stat)
-                    summary_stats[key][station] = round(float(value), 2) if pd.notnull(value) else None
-                else:
-                    summary_stats[key][station] = None
+            key = f"{col}_{stat}"
+            if (col, stat) in agg_df.columns:
+                series = agg_df[(col, stat)]
+                summary_stats[key] = {
+                    st: round(float(series[st]), 2) if (st in series.index and pd.notnull(series[st])) else None
+                    for st in stations
+                }
+            else:
+                summary_stats[key] = {st: None for st in stations}
 
     return jsonify({
         "dates": dates,

@@ -74,6 +74,10 @@ let currentComparisonData = null;
 let currentComparisonStations = [];
 let currentComparisonParams = [];
 
+// In-memory performance caches for 0ms instant UI transitions
+const stationDetailsCache = {};
+const comparisonCache = {};
+
 /* ==========================================================================
    Theme Management (Neon Dark / Solar Light)
    ========================================================================== */
@@ -214,16 +218,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnModeHeatmap')?.addEventListener('click', () => setMapMode('heatmap'));
 
     document.getElementById('stationSelect').addEventListener('change', (e) => onStationSelectChange(e.target.value));
+
+    let monthlyParamTimer = null;
+    const debouncedMonthlyParamChange = () => {
+        clearTimeout(monthlyParamTimer);
+        monthlyParamTimer = setTimeout(handleMonthlyParameterChange, 25);
+    };
+
+    let comparisonTimer = null;
+    const debouncedStationComparison = () => {
+        clearTimeout(comparisonTimer);
+        comparisonTimer = setTimeout(handleStationComparison, 35);
+    };
+
     if (typeof jQuery !== 'undefined') {
-        $('#parameterSelect').on('change select2:select select2:unselect select2:clear', handleMonthlyParameterChange);
+        $('#parameterSelect').on('change select2:select select2:unselect select2:clear', debouncedMonthlyParamChange);
     }
     document.getElementById('yearSelect').addEventListener('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
 
     // Comparison Event Listeners
     if (typeof jQuery !== 'undefined') {
-        $('#compareStations, #compareParams').on('change select2:select select2:unselect select2:clear', handleStationComparison);
+        $('#compareStations, #compareParams').on('change select2:select select2:unselect select2:clear', debouncedStationComparison);
     }
-    document.getElementById('compareYear')?.addEventListener('change', handleStationComparison);
+    document.getElementById('compareYear')?.addEventListener('change', debouncedStationComparison);
 
     // Scale Toggle Event Listeners
     document.getElementById('btnMonthlyStandard')?.addEventListener('click', () => {
@@ -721,11 +738,31 @@ function onStationSelectChange(stationName, fromMarkerClick = false) {
 
     // Load monthly data
     const year = document.getElementById('yearSelect').value;
+    const cacheKey = `${stationName}::${year || 'all'}`;
+
+    // Instant zero-latency render if data is already cached
+    if (stationDetailsCache[cacheKey]) {
+        const data = stationDetailsCache[cacheKey];
+        if (data.details) {
+            document.getElementById('metaStationName').textContent = data.details.station_name;
+            document.getElementById('metaLat').textContent = data.details.latitude.toFixed(5);
+            document.getElementById('metaLong').textContent = data.details.longitude.toFixed(5);
+        }
+        if (data.monthly_chart_data) {
+            currentMonthlyChartData = data.monthly_chart_data;
+            currentMonthlyStation = stationName;
+            currentMonthlyYear = year;
+            renderMonthlyChart(data.monthly_chart_data, stationName, year);
+        }
+        return;
+    }
+
     const url = `/station-details?station=${encodeURIComponent(stationName)}${year ? '&year=' + year : ''}`;
 
     fetch(url)
         .then(res => res.json())
         .then(data => {
+            stationDetailsCache[cacheKey] = data;
             if (data.details) {
                 document.getElementById('metaStationName').textContent = data.details.station_name;
                 document.getElementById('metaLat').textContent = data.details.latitude.toFixed(5);
@@ -886,13 +923,13 @@ function renderMonthlyChart(chartData, stationName, year) {
         return;
     }
 
-    Plotly.newPlot('monthlyChart', traces, layout, { responsive: true, displayModeBar: true });
+    Plotly.react('monthlyChart', traces, layout, { responsive: true, displayModeBar: true });
 }
 
 /* Station Comparison */
 function handleStationComparison() {
-    const stations = $('#compareStations').val();
-    const params = $('#compareParams').val();
+    const stations = (typeof jQuery !== 'undefined') ? $('#compareStations').val() : [];
+    const params = (typeof jQuery !== 'undefined') ? $('#compareParams').val() : [];
     const year = document.getElementById('compareYear').value;
 
     if (!stations || stations.length === 0 || !params || params.length === 0) {
@@ -908,6 +945,17 @@ function handleStationComparison() {
         return;
     }
 
+    const cacheKey = stations.slice().sort().join('|') + '::' + (year || 'all');
+
+    // Instant zero-latency render if comparison data for stations & year is already cached
+    if (comparisonCache[cacheKey]) {
+        currentComparisonData = comparisonCache[cacheKey];
+        currentComparisonStations = stations;
+        currentComparisonParams = params;
+        renderComparisonPlot();
+        return;
+    }
+
     fetch('/station-comparison', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -917,6 +965,7 @@ function handleStationComparison() {
     .then(data => {
         if (!data.values) return;
 
+        comparisonCache[cacheKey] = data;
         currentComparisonData = data;
         currentComparisonStations = stations;
         currentComparisonParams = params;
@@ -1029,7 +1078,7 @@ function renderComparisonPlot() {
         yaxis: yaxisConfig
     };
 
-    Plotly.newPlot('comparisonChart', traces, layout, { responsive: true, displayModeBar: true });
+    Plotly.react('comparisonChart', traces, layout, { responsive: true, displayModeBar: true });
 
     // Populate Summary Statistics Table for GHI
     const tbody = document.querySelector('#comparisonTable tbody');
