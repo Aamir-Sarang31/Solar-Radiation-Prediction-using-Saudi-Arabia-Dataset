@@ -144,9 +144,6 @@ function setTheme(theme) {
     const checkbox = document.getElementById('themeToggleCheckbox');
     if (checkbox) checkbox.checked = isDark;
 
-    const badge = document.getElementById('themeModeBadge');
-    if (badge) badge.textContent = isDark ? 'Neon Dark' : 'Solar Light';
-
     updateMapTileTheme(isDark);
 
     if (gradientLayer && typeof gradientLayer._render === 'function') {
@@ -175,6 +172,11 @@ function initThemeToggle() {
             setTheme(e.target.checked ? 'dark' : 'light');
         });
     }
+
+    document.querySelector('.sun-icon')?.addEventListener('click', () => setTheme('light'));
+    document.querySelector('.moon-icon')?.addEventListener('click', () => setTheme('dark'));
+    document.getElementById('themeModeLeft')?.addEventListener('click', () => setTheme('light'));
+    document.getElementById('themeModeRight')?.addEventListener('click', () => setTheme('dark'));
 }
 
 document.addEventListener('DOMContentLoaded', () => {

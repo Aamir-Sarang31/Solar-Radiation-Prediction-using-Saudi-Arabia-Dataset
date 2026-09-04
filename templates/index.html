@@ -20,7 +20,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     
     <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="/static/style.css?v=4.2">
+    <link rel="stylesheet" href="/static/style.css?v=4.3">
     
     <!-- Libraries -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -36,6 +36,7 @@
         <!-- Header Section with Theme Toggle -->
         <header class="header-container position-relative mb-4 text-center">
             <div class="theme-toggle-wrapper">
+                <span class="theme-mode-text theme-mode-left" id="themeModeLeft">Solar Light</span>
                 <span class="theme-label-icon sun-icon" title="Solar Light Mode">☀️</span>
                 <label class="theme-switch" for="themeToggleCheckbox" aria-label="Toggle light and neon dark mode">
                     <input type="checkbox" id="themeToggleCheckbox" checked>
@@ -44,7 +45,7 @@
                     </span>
                 </label>
                 <span class="theme-label-icon moon-icon" title="Neon Dark Mode">🌙</span>
-                <span class="theme-mode-text" id="themeModeBadge">Neon Dark</span>
+                <span class="theme-mode-text theme-mode-right" id="themeModeRight">Neon Dark</span>
             </div>
             <h1 class="main-title">Saudi Arabia Solar Radiation Prediction</h1>
             <p class="subtitle">Prepared by 
@@ -332,7 +333,7 @@
     </div>
 
     <!-- Frontend Logic -->
-    <script src="/static/app.js?v=3.5"></script>
+    <script src="/static/app.js?v=3.6"></script>
 </body>
 
 </html>

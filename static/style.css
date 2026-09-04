@@ -331,11 +331,27 @@ body {
     color: var(--primary-color);
     letter-spacing: 0.02em;
     user-select: none;
-    min-width: 76px;
-    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
 }
 
-html.dark .theme-mode-text {
+.theme-mode-left {
+    display: inline-block !important;
+    padding-right: 2px;
+}
+
+.theme-mode-right {
+    display: none !important;
+    padding-left: 2px;
+}
+
+html.dark .theme-mode-left {
+    display: none !important;
+}
+
+html.dark .theme-mode-right {
+    display: inline-block !important;
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
 }
 
