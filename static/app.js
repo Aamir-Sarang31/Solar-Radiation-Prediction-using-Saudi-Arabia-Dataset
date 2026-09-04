@@ -132,7 +132,10 @@ function setTheme(theme) {
     } else {
         document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('theme_preference', theme);
+    try {
+        sessionStorage.setItem('theme_preference', theme);
+        localStorage.setItem('theme_preference', theme);
+    } catch (e) {}
 
     const checkbox = document.getElementById('themeToggleCheckbox');
     if (checkbox) checkbox.checked = isDark;
@@ -155,8 +158,11 @@ function setTheme(theme) {
 }
 
 function initThemeToggle() {
-    // Default to dark mode for industry demo
-    const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+    // Neon Dark is always the primary default mode
+    let savedTheme = 'dark';
+    try {
+        savedTheme = sessionStorage.getItem('theme_preference') || 'dark';
+    } catch (e) {}
     setTheme(savedTheme);
 
     const checkbox = document.getElementById('themeToggleCheckbox');
