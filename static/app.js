@@ -58,6 +58,12 @@ let currentMapMode = 'pins'; // 'pins', 'heatmap', 'circles'
 let stationMetadataMap = {};
 let ghiThresholds = { low: 4500, high: 6800 };
 
+// Map tile layers for theme switching
+let lightBaseLayer = null;
+let lightRefLayer = null;
+let darkBaseLayer = null;
+let darkRefLayer = null;
+
 // Normalization scale modes
 let monthlyScaleMode = 'standard';
 let compareScaleMode = 'standard';
@@ -68,7 +74,103 @@ let currentComparisonData = null;
 let currentComparisonStations = [];
 let currentComparisonParams = [];
 
+/* ==========================================================================
+   Theme Management (Neon Dark / Solar Light)
+   ========================================================================== */
+function isDarkMode() {
+    return document.documentElement.classList.contains('dark');
+}
+
+function getPlotlyTheme() {
+    const isDark = isDarkMode();
+    if (isDark) {
+        return {
+            isDark: true,
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(11, 17, 30, 0.65)',
+            fontColor: '#94A3B8',
+            titleColor: '#00F0FF',
+            gridColor: 'rgba(255, 255, 255, 0.08)',
+            axisTitleColor: '#00F0FF',
+            tickColor: '#94A3B8',
+            palette: ['#00F0FF', '#FF00E5', '#39FF14', '#FFD600', '#FF4D4D', '#B026FF']
+        };
+    } else {
+        return {
+            isDark: false,
+            paper_bgcolor: '#FFFFFF',
+            plot_bgcolor: '#FFFFFF',
+            fontColor: '#475569',
+            titleColor: '#1E293B',
+            gridColor: '#F1F5F9',
+            axisTitleColor: '#1E293B',
+            tickColor: '#475569',
+            palette: ['#1E40AF', '#F59E0B', '#EF4444', '#10B981', '#8B5CF6', '#06B6D4']
+        };
+    }
+}
+
+function updateMapTileTheme(isDark) {
+    if (!map || !lightBaseLayer || !darkBaseLayer) return;
+    if (isDark) {
+        if (map.hasLayer(lightBaseLayer)) map.removeLayer(lightBaseLayer);
+        if (map.hasLayer(lightRefLayer)) map.removeLayer(lightRefLayer);
+        if (!map.hasLayer(darkBaseLayer)) darkBaseLayer.addTo(map);
+        if (darkRefLayer && !map.hasLayer(darkRefLayer)) darkRefLayer.addTo(map);
+    } else {
+        if (map.hasLayer(darkBaseLayer)) map.removeLayer(darkBaseLayer);
+        if (darkRefLayer && map.hasLayer(darkRefLayer)) map.removeLayer(darkRefLayer);
+        if (!map.hasLayer(lightBaseLayer)) lightBaseLayer.addTo(map);
+        if (!map.hasLayer(lightRefLayer)) lightRefLayer.addTo(map);
+    }
+}
+
+function setTheme(theme) {
+    const isDark = (theme === 'dark');
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme_preference', theme);
+
+    const checkbox = document.getElementById('themeToggleCheckbox');
+    if (checkbox) checkbox.checked = isDark;
+
+    const badge = document.getElementById('themeModeBadge');
+    if (badge) badge.textContent = isDark ? 'Neon Dark' : 'Solar Light';
+
+    updateMapTileTheme(isDark);
+
+    if (gradientLayer && typeof gradientLayer._render === 'function') {
+        gradientLayer._render();
+    }
+
+    if (currentMonthlyChartData && currentMonthlyStation) {
+        renderMonthlyChart(currentMonthlyChartData, currentMonthlyStation, currentMonthlyYear);
+    }
+    if (currentComparisonData) {
+        renderComparisonPlot();
+    }
+}
+
+function initThemeToggle() {
+    // Default to dark mode for industry demo
+    const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+    setTheme(savedTheme);
+
+    const checkbox = document.getElementById('themeToggleCheckbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+            setTheme(e.target.checked ? 'dark' : 'light');
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Initialize Theme Toggle (Defaults to Neon Dark)
+    initThemeToggle();
+
     // 1. Initialize Map
     initMap();
 
@@ -158,44 +260,128 @@ function initMap() {
     });
 
     // Base light gray layer (English)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    lightBaseLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
         maxZoom: 16
-    }).addTo(map);
+    });
 
     // English labels and boundaries overlay
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+    lightRefLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
         attribution: '',
         maxZoom: 16
-    }).addTo(map);
+    });
+
+    // Esri World Dark Gray Base layer for Neon Dark Mode (watermark-free)
+    darkBaseLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        maxZoom: 16
+    });
+
+    // English labels and boundaries overlay (Dark)
+    darkRefLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '',
+        maxZoom: 16
+    });
+
+    // Apply the active theme's tile layer
+    updateMapTileTheme(isDarkMode());
 }
 
-// Invariant Solar Radiation Gradient Canvas Layer
-// Guarantees Red (High), Yellow (Medium), and Green (Low) colors NEVER shift on zoom,
-// and radial influence scales proportionally with ground distance instead of shrinking into dots.
+// Shared GHI color mapping: normalized t (0-1) to smooth Green → Yellow → Orange → Red
+function getGhiColorRGB(t) {
+    let r, g, b;
+    if (t < 0.35) {
+        // Green → Yellow-Green
+        const s = t / 0.35;
+        r = Math.round(16 + s * (180 - 16));
+        g = Math.round(185 + s * (210 - 185));
+        b = Math.round(129 - s * 109);
+    } else if (t < 0.6) {
+        // Yellow-Green → Amber
+        const s = (t - 0.35) / 0.25;
+        r = Math.round(180 + s * (245 - 180));
+        g = Math.round(210 - s * (210 - 158));
+        b = Math.round(20 - s * 12);
+    } else {
+        // Amber → Deep Red
+        const s = (t - 0.6) / 0.4;
+        r = Math.round(245 - s * (245 - 200));
+        g = Math.round(158 - s * (158 - 40));
+        b = Math.round(8 + s * (45 - 8));
+    }
+    return [r, g, b];
+}
+
+// Default Leaflet pin icon for normal view
+const defaultPinIcon = new L.Icon.Default();
+
+// Custom GHI-colored beacon icon for gradient view
+function createGhiBeaconIcon(ghi, minGhi, maxGhi) {
+    const t = Math.max(0, Math.min(1, (ghi - minGhi) / (maxGhi - minGhi || 1)));
+    const [r, g, b] = getGhiColorRGB(t);
+    const color = `rgb(${r}, ${g}, ${b})`;
+    return L.divIcon({
+        className: 'station-beacon-marker',
+        html: `<div class="station-beacon" style="--beacon-color: ${color};" title="GHI: ${Math.round(ghi)} Wh/m²"><div class="beacon-core"></div></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -12]
+    });
+}
+
+function updateStationMarkersMode(mode) {
+    const isHeatmap = (mode === 'heatmap');
+    const ghiMin = gradientLayer ? gradientLayer._ghiMin : 4000;
+    const ghiMax = gradientLayer ? gradientLayer._ghiMax : 7500;
+
+    Object.keys(markers).forEach(name => {
+        const marker = markers[name];
+        const st = stationMetadataMap[name];
+        if (!marker || !st) return;
+
+        if (isHeatmap) {
+            marker.setIcon(createGhiBeaconIcon(st.avg_ghi, ghiMin, ghiMax));
+        } else {
+            marker.setIcon(defaultPinIcon);
+        }
+    });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// IDW Solar Radiation Layer – Precise Vector-Clipped Geographical Coverage
+// Sourced from official geoBoundaries administrative data.
+// Uses Inverse Distance Weighting to interpolate GHI across Saudi Arabia,
+// hardware-clipped via 2D Canvas clip() to the exact national boundary.
+// ──────────────────────────────────────────────────────────────────
 const SolarGradientLayer = L.Layer.extend({
     initialize: function(stations) {
         this.stations = stations || [];
+        const ghis = this.stations.map(s => s.avg_ghi).filter(v => v > 0);
+        this._ghiMin = ghis.length ? Math.min(...ghis) : 4000;
+        this._ghiMax = ghis.length ? Math.max(...ghis) : 7500;
     },
+
     onAdd: function(map) {
         this._map = map;
         this._canvas = L.DomUtil.create('canvas', 'solar-gradient-canvas');
         this._canvas.style.position = 'absolute';
         this._canvas.style.pointerEvents = 'none';
         this._canvas.style.zIndex = '350';
-        
+
         map.getPanes().overlayPane.appendChild(this._canvas);
         map.on('moveend zoomend resize viewreset', this._render, this);
         this._render();
     },
+
     onRemove: function(map) {
         if (this._canvas && this._canvas.parentNode) {
             this._canvas.parentNode.removeChild(this._canvas);
         }
         map.off('moveend zoomend resize viewreset', this._render, this);
     },
+
     _render: function() {
-        if (!this._map || !this._canvas) return;
+        if (!this._map || !this._canvas || this.stations.length === 0) return;
         const map = this._map;
         const bounds = map.getBounds();
         const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
@@ -210,46 +396,142 @@ const SolarGradientLayer = L.Layer.extend({
         const ctx = this._canvas.getContext('2d');
         ctx.clearRect(0, 0, width, height);
 
-        // Ground radius: ~120 km ground distance (1.1 degrees latitude)
-        // Automatically expands/shrinks in pixels with zoom so geographic coverage is constant!
-        const p1 = map.latLngToLayerPoint([24.0, 45.0]);
-        const p2 = map.latLngToLayerPoint([25.1, 45.0]);
-        const pixelRadius = Math.max(32, Math.abs(p1.y - p2.y));
+        // Render at reduced resolution for high-performance IDW sampling, then stretch
+        const STEP = 4;
+        const sw = Math.ceil(width / STEP);
+        const sh = Math.ceil(height / STEP);
 
-        this.stations.forEach(st => {
-            const pt = map.latLngToLayerPoint([st.latitude, st.longitude]);
-            const x = pt.x - topLeft.x;
-            const y = pt.y - topLeft.y;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = sw;
+        offCanvas.height = sh;
+        const offCtx = offCanvas.getContext('2d');
+        const imgData = offCtx.createImageData(sw, sh);
+        const pixels = imgData.data;
 
-            if (x < -pixelRadius || x > width + pixelRadius || y < -pixelRadius || y > height + pixelRadius) return;
+        const stLats = this.stations.map(s => s.latitude);
+        const stLngs = this.stations.map(s => s.longitude);
+        const stGhis = this.stations.map(s => s.avg_ghi);
+        const nStations = this.stations.length;
 
-            // Invariant color classification based on solar irradiance:
-            // High (>= 6300 Wh/m²): Red
-            // Medium (5400 - 6300 Wh/m²): Yellow
-            // Low (< 5400 Wh/m²): Green
-            let r, g, b;
-            if (st.avg_ghi >= 6300) {
-                r = 239; g = 68; b = 68;   // Red
-            } else if (st.avg_ghi >= 5400) {
-                r = 234; g = 179; b = 8;   // Yellow
-            } else {
-                r = 16; g = 185; b = 129;  // Green
+        const ghiMin = this._ghiMin;
+        const ghiRange = this._ghiMax - ghiMin || 1;
+        const P = 2.5; // IDW power parameter
+
+        // Normalize SAUDI_BOUNDARY rings (handles single ring or MultiPolygon array of rings)
+        const rings = (Array.isArray(SAUDI_BOUNDARY[0][0])) ? SAUDI_BOUNDARY : [SAUDI_BOUNDARY];
+
+        // Evaluate IDW across the visible area covering Saudi Arabia
+        for (let sy = 0; sy < sh; sy++) {
+            const py = topLeft.y + sy * STEP + STEP / 2;
+            for (let sx = 0; sx < sw; sx++) {
+                const px = topLeft.x + sx * STEP + STEP / 2;
+                const latlng = map.layerPointToLatLng([px, py]);
+                const lat = latlng.lat;
+                const lng = latlng.lng;
+
+                // Quick bounding box check for Saudi Arabia (+ slight margin for boundary sampling)
+                if (lat < 15.8 || lat > 32.6 || lng < 34.0 || lng > 56.0) continue;
+
+                let numerator = 0;
+                let denominator = 0;
+                let exact = -1;
+
+                for (let k = 0; k < nStations; k++) {
+                    const dLat = lat - stLats[k];
+                    const dLng = lng - stLngs[k];
+                    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+
+                    if (dist < 0.01) {
+                        exact = k;
+                        break;
+                    }
+                    const w = 1 / Math.pow(dist, P);
+                    numerator += w * stGhis[k];
+                    denominator += w;
+                }
+
+                const ghi = exact >= 0 ? stGhis[exact] : (denominator > 0 ? numerator / denominator : ghiMin);
+                const t = Math.max(0, Math.min(1, (ghi - ghiMin) / ghiRange));
+                const [r, g, b] = getGhiColorRGB(t);
+
+                const idx = (sy * sw + sx) * 4;
+                pixels[idx]     = r;
+                pixels[idx + 1] = g;
+                pixels[idx + 2] = b;
+                pixels[idx + 3] = 175; // ~68% opacity
             }
+        }
 
-            const grad = ctx.createRadialGradient(x, y, 0, x, y, pixelRadius);
-            grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.70)`);
-            grad.addColorStop(0.55, `rgba(${r}, ${g}, ${b}, 0.35)`);
-            grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+        offCtx.putImageData(imgData, 0, 0);
 
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(x, y, pixelRadius, 0, Math.PI * 2);
-            ctx.fill();
-        });
+        // Helper to trace all boundary rings onto canvas context
+        function traceBoundaryPath(c) {
+            rings.forEach(ring => {
+                ring.forEach((coord, i) => {
+                    const pt = map.latLngToLayerPoint([coord[1], coord[0]]);
+                    const x = pt.x - topLeft.x;
+                    const y = pt.y - topLeft.y;
+                    if (i === 0) c.moveTo(x, y);
+                    else c.lineTo(x, y);
+                });
+                c.closePath();
+            });
+        }
+
+        // 1. Vector Clip to accurate Saudi Arabia boundary (Hardware-accelerated)
+        ctx.save();
+        ctx.beginPath();
+        traceBoundaryPath(ctx);
+        ctx.clip();
+
+        // 2. Draw scaled smooth offscreen canvas - clipped perfectly at sub-pixel resolution
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(offCanvas, 0, 0, sw, sh, 0, 0, width, height);
+        ctx.restore();
+
+        // 3. Draw refined border outline stroke (with subtle neon glow in dark mode)
+        ctx.save();
+        ctx.beginPath();
+        traceBoundaryPath(ctx);
+        if (isDarkMode()) {
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
+            ctx.shadowColor = 'rgba(0, 240, 255, 0.5)';
+            ctx.shadowBlur = 6;
+            ctx.lineWidth = 1.6;
+        } else {
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+            ctx.lineWidth = 1.2;
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+});
+
+// Color Legend Control for the Gradient View
+const SolarLegendControl = L.Control.extend({
+    options: { position: 'bottomleft' },
+    initialize: function(ghiMin, ghiMax) {
+        this._ghiMin = ghiMin;
+        this._ghiMax = ghiMax;
+    },
+    onAdd: function() {
+        const div = L.DomUtil.create('div', 'solar-legend');
+        div.innerHTML = `
+            <div class="solar-legend-title">Avg GHI (Wh/m²)</div>
+            <div class="solar-legend-bar"></div>
+            <div class="solar-legend-labels">
+                <span>${Math.round(this._ghiMin)}</span>
+                <span>${Math.round((this._ghiMin + this._ghiMax) / 2)}</span>
+                <span>${Math.round(this._ghiMax)}</span>
+            </div>
+        `;
+        return div;
     }
 });
 
 let gradientLayer = null;
+let legendControl = null;
 
 function loadMapAndStationData() {
     const statusDiv = document.getElementById('mapStatus');
@@ -363,12 +645,20 @@ function setMapMode(mode) {
     if (mode === 'pins') {
         btnPins?.classList.add('active');
         if (gradientLayer) map.removeLayer(gradientLayer);
+        if (legendControl) { map.removeControl(legendControl); legendControl = null; }
         Object.values(markers).forEach(m => m.addTo(map));
+        updateStationMarkersMode('pins');
         if (toggleBtn) toggleBtn.textContent = 'Toggle Gradient View';
     } else if (mode === 'heatmap') {
         btnHeatmap?.classList.add('active');
         Object.values(markers).forEach(m => m.addTo(map));
         if (gradientLayer) gradientLayer.addTo(map);
+        updateStationMarkersMode('heatmap');
+        // Show color legend
+        if (!legendControl && gradientLayer) {
+            legendControl = new SolarLegendControl(gradientLayer._ghiMin, gradientLayer._ghiMax);
+            legendControl.addTo(map);
+        }
         if (toggleBtn) toggleBtn.textContent = 'Switch to Normal Map';
     }
 }
@@ -439,7 +729,7 @@ function renderMonthlyChart(chartData, stationName, year) {
     if (!selectedParams || selectedParams.length === 0) {
         try { Plotly.purge(chartEl); } catch (e) {}
         chartEl.innerHTML =
-            '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed #CBD5E1; border-radius: 8px; margin-top: 15px;">Please select at least one parameter above to view monthly data.</div>';
+            '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">Please select at least one parameter above to view monthly data.</div>';
         return;
     }
 
@@ -448,9 +738,8 @@ function renderMonthlyChart(chartData, stationName, year) {
 
     const traces = [];
     const isNorm = (monthlyScaleMode === 'normalized');
-
-    // Deep Cobalt Solar Palette
-    const colors = ['#1E40AF', '#F59E0B', '#EF4444', '#10B981', '#8B5CF6', '#06B6D4'];
+    const theme = getPlotlyTheme();
+    const colors = theme.palette;
 
     selectedParams.forEach((param, idx) => {
         if (chartData.data && chartData.data[param]) {
@@ -500,35 +789,36 @@ function renderMonthlyChart(chartData, stationName, year) {
     const titleText = `Data for ${stationName}${year ? ' (' + year + ')' : ''}${titleSuffix}`;
 
     const yaxisConfig = isNorm ? {
-        title: { text: 'Normalized Scale (%)', font: { size: 11, color: '#1E293B' } },
+        title: { text: 'Normalized Scale (%)', font: { size: 11, color: theme.axisTitleColor } },
         range: [-5, 105],
-        gridcolor: '#F1F5F9',
-        tickfont: { size: 11 }
+        gridcolor: theme.gridColor,
+        tickfont: { size: 11, color: theme.tickColor }
     } : {
-        title: { text: 'Parameter Values', font: { size: 11, color: '#1E293B' } },
-        gridcolor: '#F1F5F9',
-        tickfont: { size: 11 }
+        title: { text: 'Parameter Values', font: { size: 11, color: theme.axisTitleColor } },
+        gridcolor: theme.gridColor,
+        tickfont: { size: 11, color: theme.tickColor }
     };
 
     const layout = {
         title: {
             text: titleText,
-            font: { family: 'Poppins, sans-serif', size: 14, color: '#1E293B' }
+            font: { family: 'Poppins, sans-serif', size: 14, color: theme.titleColor }
         },
-        paper_bgcolor: '#FFFFFF',
-        plot_bgcolor: '#FFFFFF',
-        font: { family: 'Poppins, sans-serif', size: 11, color: '#475569' },
+        paper_bgcolor: theme.paper_bgcolor,
+        plot_bgcolor: theme.plot_bgcolor,
+        font: { family: 'Poppins, sans-serif', size: 11, color: theme.fontColor },
         margin: { t: 40, r: 25, l: 50, b: 65 },
         barmode: 'overlay',
         legend: {
             orientation: 'h',
             y: -0.25,
             x: 0.5,
-            xanchor: 'center'
+            xanchor: 'center',
+            font: { color: theme.fontColor }
         },
         xaxis: {
-            gridcolor: '#F1F5F9',
-            tickfont: { size: 11 }
+            gridcolor: theme.gridColor,
+            tickfont: { size: 11, color: theme.tickColor }
         },
         yaxis: yaxisConfig
     };
@@ -548,7 +838,7 @@ function handleStationComparison() {
         if (chartEl) {
             try { Plotly.purge(chartEl); } catch (e) {}
             chartEl.innerHTML =
-                '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed #CBD5E1; border-radius: 8px; margin-top: 15px;">Please select at least one station and one parameter above to display comparison data.</div>';
+                '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">Please select at least one station and one parameter above to display comparison data.</div>';
         }
         document.querySelector('#comparisonTable tbody').innerHTML =
             '<tr><td colspan="5" class="text-center text-muted">Select stations above to display GHI summary statistics.</td></tr>';
@@ -588,7 +878,8 @@ function renderComparisonPlot() {
     const isNorm = (compareScaleMode === 'normalized');
 
     const traces = [];
-    const colors = ['#1E40AF', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6', '#06B6D4'];
+    const theme = getPlotlyTheme();
+    const colors = theme.palette;
     let colorIdx = 0;
 
     // Calculate parameter-level min & max across all selected stations for normalization
@@ -643,34 +934,34 @@ function renderComparisonPlot() {
     const titleText = `${params.join(', ')} Comparison Across Stations${titleSuffix}`;
 
     const yaxisConfig = isNorm ? {
-        title: { text: 'Normalized Scale (%)', font: { size: 11, color: '#1E293B' } },
+        title: { text: 'Normalized Scale (%)', font: { size: 11, color: theme.axisTitleColor } },
         range: [-5, 105],
-        gridcolor: '#F1F5F9',
-        tickfont: { size: 11 }
+        gridcolor: theme.gridColor,
+        tickfont: { size: 11, color: theme.tickColor }
     } : {
-        title: { text: params.join(', '), font: { size: 11, color: '#1E293B' } },
-        gridcolor: '#F1F5F9',
-        tickfont: { size: 11 }
+        title: { text: params.join(', '), font: { size: 11, color: theme.axisTitleColor } },
+        gridcolor: theme.gridColor,
+        tickfont: { size: 11, color: theme.tickColor }
     };
 
     const layout = {
         title: {
             text: titleText,
-            font: { family: 'Poppins, sans-serif', size: 14, color: '#1E293B' }
+            font: { family: 'Poppins, sans-serif', size: 14, color: theme.titleColor }
         },
-        paper_bgcolor: '#FFFFFF',
-        plot_bgcolor: '#FFFFFF',
-        font: { family: 'Poppins, sans-serif', size: 11, color: '#475569' },
+        paper_bgcolor: theme.paper_bgcolor,
+        plot_bgcolor: theme.plot_bgcolor,
+        font: { family: 'Poppins, sans-serif', size: 11, color: theme.fontColor },
         margin: { t: 40, r: 180, l: 50, b: 50 },
         legend: {
             orientation: 'v',
             x: 1.02,
             y: 0.85,
-            font: { size: 11 }
+            font: { size: 11, color: theme.fontColor }
         },
         xaxis: {
-            gridcolor: '#F1F5F9',
-            tickfont: { size: 11 }
+            gridcolor: theme.gridColor,
+            tickfont: { size: 11, color: theme.tickColor }
         },
         yaxis: yaxisConfig
     };
