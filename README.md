@@ -458,19 +458,19 @@ The repository includes a production-ready, interactive web dashboard and REST A
 
 ### ✨ Key Web Application Features
 
-1. **🌙 Bright Neon Dark Mode UI & Theme Switch**
-   - **Engineered for Industry Demos**: High-contrast, state-of-the-art dark theme utilizing a radial slate-black background (`#10192e` to `#080c14`), glowing neon cyan (`#00F0FF`) headings and active tabs, electric magenta (`#FF00E5`) accents, and glowing neon green (`#00FF9D`) prediction outputs.
-   - **Header Theme Toggle Switch**: Pill-shaped toggle switch with ☀️ Sun and 🌙 Moon icons, active status badge (`Neon Dark` / `Solar Light`), and automatic `localStorage` preference persistence.
+1. **🌙 Bright Neon Dark Mode UI (Default) & Dynamic Theme Switch**
+   - **Primary Default Theme**: High-contrast, state-of-the-art dark theme utilizing a radial slate-black background (`#10192e` to `#080c14`), glowing neon cyan (`#00F0FF`) headings and active tabs, electric magenta (`#FF00E5`) accents, and glowing neon green (`#00FF9D`) prediction outputs.
+   - **Interactive Theme Switch**: Pill-shaped toggle with ☀️ Sun and 🌙 Moon icons, active status badge positioned dynamically (`Solar Light` on the left before the sun icon, `Neon Dark` on the right after the moon icon), clickable emoji icons, and automatic `localStorage` preference persistence.
    - **Full Component Retheming**: Translucent glassmorphic cards, themed Select2 dropdowns, illuminated data tables, and high-visibility range indicators.
 
 2. **🗺️ Precision Geographic Station Map & Solar Gradient**
    - **High-Precision Vector Clipping**: Uses official 3,174-point **geoBoundaries (ADM0)** vector coordinates covering both mainland Saudi Arabia and the Farasan Islands, hardware-clipped via 2D Canvas `ctx.clip()` with zero raster blur or international border bleeding.
-   - **Dynamic GHI Station Beacons**: In **Gradient View**, the 43 weather station pins transform into glowing, color-coded circular beacons reflecting each station's exact average GHI (green for lower irradiance, amber/yellow for mid-range, deep red for highest).
+   - **Dynamic GHI Station Beacons**: In **Gradient View**, the 43 weather station pins transform into crisp, white-bordered circular beacons with true GHI color coding (green for lower irradiance, amber/yellow for mid-range, deep red for highest) with zero unwanted color haloing.
    - **Dual Watermark-Free Basemaps**: Dynamically swaps between **Esri World Dark Gray Base + Reference** in Neon Dark Mode and **Esri World Light Gray Base + Reference** in Solar Light Mode, ensuring clean English geography without third-party watermarks.
    - **Station Inspector**: Selecting any station pans smoothly and retrieves GPS coordinates, elevation, observation period, and historical averages.
 
 3. **📊 Dynamic Themed Time Series & Scale Normalization**
-   - Multi-parameter time-series plotting powered by Plotly.js.
+   - Multi-parameter time-series plotting powered by Plotly.js with instant client-side in-memory caching and debounced parameter selection.
    - **Theme-Aware Charts**: Automatically switches between dark transparent backgrounds with vibrant neon traces (`#00F0FF`, `#FF00E5`, `#39FF14`, `#FFD600`) and the clean light theme with solar cobalt colors upon toggling the theme switch.
    - Filter by station and year (2017–2021 or All Years aggregate).
    - **Dual Scale Modes**:
@@ -478,7 +478,7 @@ The repository includes a production-ready, interactive web dashboard and REST A
      - *Normalized (0–100%)*: Min-max normalizes disparate metrics onto a unified vertical axis to clearly examine cross-parameter correlations.
 
 4. **📈 Multi-Station Comparison & Statistical Benchmarks**
-   - Compare multiple stations side-by-side across any meteorological parameter with dynamic splines.
+   - Compare multiple stations side-by-side across any meteorological parameter with dynamic splines and sub-50ms instant response via client-side caching and vectorized backend aggregation.
    - **Automated GHI Summary Statistics Table**: Dynamically calculates Mean, Minimum, Maximum, and Standard Deviation GHI for selected stations with themed table styling.
 
 5. **⚡ Real-Time GHI Prediction Engine**
