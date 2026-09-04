@@ -826,8 +826,10 @@ function renderMonthlyChart(chartData, stationName, year) {
         return;
     }
 
-    // Completely wipe any previous placeholder DOM elements before Plotly renders
-    chartEl.innerHTML = '';
+    // If a placeholder message was present, clear it cleanly
+    if (chartEl.children.length > 0 && !chartEl.querySelector('.js-plotly-plot')) {
+        chartEl.innerHTML = '';
+    }
 
     const traces = [];
     const isNorm = (monthlyScaleMode === 'normalized');
@@ -923,7 +925,7 @@ function renderMonthlyChart(chartData, stationName, year) {
         return;
     }
 
-    Plotly.react('monthlyChart', traces, layout, { responsive: true, displayModeBar: true });
+    Plotly.newPlot('monthlyChart', traces, layout, { responsive: true, displayModeBar: true });
 }
 
 /* Station Comparison */
@@ -981,8 +983,10 @@ function renderComparisonPlot() {
     const chartEl = document.getElementById('comparisonChart');
     if (!chartEl) return;
 
-    // Completely wipe any previous placeholder DOM elements before Plotly renders
-    chartEl.innerHTML = '';
+    // If a placeholder message was present, clear it cleanly
+    if (chartEl.children.length > 0 && !chartEl.querySelector('.js-plotly-plot')) {
+        chartEl.innerHTML = '';
+    }
 
     const data = currentComparisonData;
     const stations = currentComparisonStations;
@@ -1078,7 +1082,7 @@ function renderComparisonPlot() {
         yaxis: yaxisConfig
     };
 
-    Plotly.react('comparisonChart', traces, layout, { responsive: true, displayModeBar: true });
+    Plotly.newPlot('comparisonChart', traces, layout, { responsive: true, displayModeBar: true });
 
     // Populate Summary Statistics Table for GHI
     const tbody = document.querySelector('#comparisonTable tbody');
