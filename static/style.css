@@ -698,6 +698,22 @@ html.dark .prediction-alert {
     color: #EF4444 !important;
 }
 
+.select2-container--default .select2-selection--multiple .select2-selection__clear {
+    color: var(--text-muted) !important;
+    font-size: 1.15rem !important;
+    margin-right: 8px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    float: right;
+    margin-top: 6px;
+    font-weight: 700;
+    transition: color 0.15s ease;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__clear:hover {
+    color: #EF4444 !important;
+}
+
 .select2-dropdown {
     background-color: var(--select2-dropdown-bg) !important;
     border: 1px solid var(--select2-dropdown-border) !important;

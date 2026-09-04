@@ -176,9 +176,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Initialize Select2 Components safely
     if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 === 'function') {
-        $('#parameterSelect').select2({ placeholder: "Select Parameters", width: '100%' });
-        $('#compareStations').select2({ placeholder: "Select Stations", width: '100%' });
-        $('#compareParams').select2({ placeholder: "Select Parameters", width: '100%' });
+        $('#parameterSelect').select2({
+            placeholder: "Select Parameters",
+            width: '100%',
+            allowClear: true,
+            closeOnSelect: false
+        });
+        $('#compareStations').select2({
+            placeholder: "Select Stations",
+            width: '100%',
+            allowClear: true,
+            closeOnSelect: false
+        });
+        $('#compareParams').select2({
+            placeholder: "Select Parameters",
+            width: '100%',
+            allowClear: true,
+            closeOnSelect: false
+        });
     }
 
     // 3. Load Map, Station Data, and Dynamic Ranges
@@ -194,12 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('stationSelect').addEventListener('change', (e) => onStationSelectChange(e.target.value));
     if (typeof jQuery !== 'undefined') {
-        $('#parameterSelect').on('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
+        $('#parameterSelect').on('change select2:select select2:unselect select2:clear', handleMonthlyParameterChange);
     }
     document.getElementById('yearSelect').addEventListener('change', () => onStationSelectChange(document.getElementById('stationSelect').value));
 
     // Comparison Event Listeners
-    $('#compareStations, #compareParams, #compareYear').on('change', handleStationComparison);
+    if (typeof jQuery !== 'undefined') {
+        $('#compareStations, #compareParams').on('change select2:select select2:unselect select2:clear', handleStationComparison);
+    }
+    document.getElementById('compareYear')?.addEventListener('change', handleStationComparison);
 
     // Scale Toggle Event Listeners
     document.getElementById('btnMonthlyStandard')?.addEventListener('click', () => {
@@ -717,6 +735,31 @@ function onStationSelectChange(stationName, fromMarkerClick = false) {
         .catch(err => console.error("Error loading station details:", err));
 }
 
+function handleMonthlyParameterChange() {
+    const chartEl = document.getElementById('monthlyChart');
+    const selectedParams = (typeof jQuery !== 'undefined') ? $('#parameterSelect').val() : null;
+
+    // Immediately handle empty selection synchronously (no network latency)
+    if (!selectedParams || selectedParams.length === 0) {
+        if (chartEl) {
+            try { Plotly.purge(chartEl); } catch (e) {}
+            chartEl.innerHTML =
+                '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">Please select at least one parameter above to view monthly data.</div>';
+        }
+        return;
+    }
+
+    // If monthly chart data is already cached for current station, render immediately without any network fetch
+    if (currentMonthlyChartData && currentMonthlyStation) {
+        renderMonthlyChart(currentMonthlyChartData, currentMonthlyStation, currentMonthlyYear);
+    } else {
+        const stationVal = document.getElementById('stationSelect')?.value;
+        if (stationVal) {
+            onStationSelectChange(stationVal);
+        }
+    }
+}
+
 function renderMonthlyChart(chartData, stationName, year) {
     currentMonthlyChartData = chartData;
     currentMonthlyStation = stationName;
@@ -725,11 +768,18 @@ function renderMonthlyChart(chartData, stationName, year) {
     const chartEl = document.getElementById('monthlyChart');
     if (!chartEl) return;
 
-    const selectedParams = $('#parameterSelect').val();
+    const selectedParams = (typeof jQuery !== 'undefined') ? $('#parameterSelect').val() : null;
     if (!selectedParams || selectedParams.length === 0) {
         try { Plotly.purge(chartEl); } catch (e) {}
         chartEl.innerHTML =
             '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">Please select at least one parameter above to view monthly data.</div>';
+        return;
+    }
+
+    if (!chartData || !chartData.data) {
+        try { Plotly.purge(chartEl); } catch (e) {}
+        chartEl.innerHTML =
+            '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">No monthly data available for this station.</div>';
         return;
     }
 
@@ -822,6 +872,13 @@ function renderMonthlyChart(chartData, stationName, year) {
         },
         yaxis: yaxisConfig
     };
+
+    if (traces.length === 0) {
+        try { Plotly.purge(chartEl); } catch (e) {}
+        chartEl.innerHTML =
+            '<div class="d-flex align-items-center justify-content-center text-muted" style="height: 350px; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 15px; background: var(--input-bg);">No monthly data available for the selected parameter(s).</div>';
+        return;
+    }
 
     Plotly.newPlot('monthlyChart', traces, layout, { responsive: true, displayModeBar: true });
 }
