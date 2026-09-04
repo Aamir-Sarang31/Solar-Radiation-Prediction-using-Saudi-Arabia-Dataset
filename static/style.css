@@ -203,9 +203,9 @@ html.dark {
     --popup-border: rgba(0, 240, 255, 0.35);
     --popup-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 240, 255, 0.25);
 
-    /* Beacon Marker Glow */
-    --beacon-glow: 0 0 14px var(--beacon-color, #10B981), 0 0 28px var(--beacon-color, #10B981);
-    --beacon-border: #080c14;
+    /* Beacon Marker Glow (Matches clean, crisp Light Mode style without unwanted green halo) */
+    --beacon-glow: 0 2px 8px rgba(0, 0, 0, 0.65);
+    --beacon-border: #FFFFFF;
 }
 
 /* ==========================================================================
@@ -842,7 +842,7 @@ html.dark .solar-legend-title {
 .station-beacon {
     width: 20px;
     height: 20px;
-    background: var(--beacon-color, #10B981);
+    background: var(--beacon-color, #F59E0B);
     border: 2.5px solid var(--beacon-border);
     border-radius: 50%;
     box-shadow: var(--beacon-glow);
@@ -856,7 +856,7 @@ html.dark .solar-legend-title {
 
 .station-beacon:hover {
     transform: scale(1.45);
-    box-shadow: 0 0 20px var(--beacon-color, #10B981), 0 0 35px var(--beacon-color, #10B981);
+    box-shadow: 0 0 16px var(--beacon-color, rgba(255, 255, 255, 0.8)), 0 2px 10px rgba(0, 0, 0, 0.5);
     z-index: 1000 !important;
 }
 
