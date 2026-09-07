@@ -317,8 +317,8 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 ├── Screenshots/                   # Web application interface previews
 │   ├── homepage.png               # Interactive Station Map (Normal Pins View)
 │   ├── homepage_gradient.png      # Invariant Solar Radiation Gradient View
-│   ├── Station_comparison.png     # Multi-station comparison & GHI summary statistics
 │   ├── Features_comparison.png    # Monthly resource feature trends & scale normalization
+│   ├── Station_comparison.png     # Multi-station comparison & GHI summary statistics
 │   └── Predictions.png            # Real-time GHI prediction interface (FT-Transformer)
 │
 ├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
@@ -444,10 +444,10 @@ The repository includes a production-ready, interactive web dashboard and REST A
 | ![Homepage & Map View](Screenshots/homepage.png) | ![Gradient Heatmap View](Screenshots/homepage_gradient.png) |
 | *Interactive 43-station map (CARTO Positron) with station inspector & metadata* | *Continuous spatial solar irradiance gradient heatmap overlay* |
 
-| Multi-Station Comparison & GHI Statistics | Monthly Meteorological Feature Trends |
+| Monthly Meteorological Feature Trends | Multi-Station Comparison & GHI Statistics |
 | :---: | :---: |
-| ![Station Comparison](Screenshots/Station_comparison.png) | ![Monthly Resource Data](Screenshots/Features_comparison.png) |
-| *Multi-station comparison across 2017–2021 with dynamic scale normalization & summary stats* | *Per-station multi-parameter time series with dual-scale visualization (Standard vs Normalized)* |
+| ![Monthly Resource Data](Screenshots/Features_comparison.png) | ![Station Comparison](Screenshots/Station_comparison.png) |
+| *Per-station multi-parameter time series with dual-scale visualization (Standard vs Normalized)* | *Multi-station comparison across 2017–2021 with dynamic scale normalization & summary stats* |
 
 | Real-Time GHI Prediction Interface |
 | :---: |
