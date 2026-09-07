@@ -330,27 +330,44 @@ function initMap() {
     updateMapTileTheme(isDarkMode());
 }
 
-// Shared GHI color mapping: normalized t (0-1) to smooth Green → Yellow → Orange → Red
+// Shared GHI color mapping: normalized t (0-1) to smooth Blue → Cyan → Green → Yellow → Orange → Red
+// Uses gamma stretch (power 0.72) to spread mid-range IDW values across more of the color spectrum,
+// preventing the "all orange" clustering that occurs when station GHI values span a narrow range.
 function getGhiColorRGB(t) {
+    // Gamma stretch: pull mid-range values toward brighter colours so the map looks varied
+    t = Math.pow(Math.max(0, Math.min(1, t)), 0.72);
+
     let r, g, b;
-    if (t < 0.35) {
-        // Green → Yellow-Green
-        const s = t / 0.35;
-        r = Math.round(16 + s * (180 - 16));
-        g = Math.round(185 + s * (210 - 185));
-        b = Math.round(129 - s * 109);
+    if (t < 0.2) {
+        // Deep Blue → Cyan
+        const s = t / 0.2;
+        r = Math.round(10  + s * 0);
+        g = Math.round(60  + s * (210 - 60));
+        b = Math.round(200 + s * (255 - 200));
+    } else if (t < 0.4) {
+        // Cyan → Green
+        const s = (t - 0.2) / 0.2;
+        r = Math.round(0   + s * 30);
+        g = Math.round(210 + s * (230 - 210));
+        b = Math.round(255 - s * 255);
     } else if (t < 0.6) {
-        // Yellow-Green → Amber
-        const s = (t - 0.35) / 0.25;
-        r = Math.round(180 + s * (245 - 180));
-        g = Math.round(210 - s * (210 - 158));
-        b = Math.round(20 - s * 12);
+        // Green → Yellow
+        const s = (t - 0.4) / 0.2;
+        r = Math.round(30  + s * (255 - 30));
+        g = Math.round(230 - s * (230 - 220));
+        b = Math.round(0);
+    } else if (t < 0.8) {
+        // Yellow → Orange
+        const s = (t - 0.6) / 0.2;
+        r = Math.round(255);
+        g = Math.round(220 - s * (220 - 110));
+        b = Math.round(0);
     } else {
-        // Amber → Deep Red
-        const s = (t - 0.6) / 0.4;
-        r = Math.round(245 - s * (245 - 200));
-        g = Math.round(158 - s * (158 - 40));
-        b = Math.round(8 + s * (45 - 8));
+        // Orange → Deep Red
+        const s = (t - 0.8) / 0.2;
+        r = Math.round(255 - s * 60);
+        g = Math.round(110 - s * 110);
+        b = Math.round(0   + s * 30);
     }
     return [r, g, b];
 }
@@ -359,13 +376,14 @@ function getGhiColorRGB(t) {
 const defaultPinIcon = new L.Icon.Default();
 
 // Custom GHI-colored beacon icon for gradient view
-function createGhiBeaconIcon(ghi, minGhi, maxGhi) {
-    const t = Math.max(0, Math.min(1, (ghi - minGhi) / (maxGhi - minGhi || 1)));
+// Uses mean-centred normalization: t=0.5 → mean GHI, blue = below avg, red = above avg.
+function createGhiBeaconIcon(ghi, ghiMean, ghiHalfRange) {
+    const t = Math.max(0, Math.min(1, 0.5 + (ghi - ghiMean) / (2 * ghiHalfRange)));
     const [r, g, b] = getGhiColorRGB(t);
     const color = `rgb(${r}, ${g}, ${b})`;
     return L.divIcon({
         className: 'station-beacon-marker',
-        html: `<div class="station-beacon" style="--beacon-color: ${color};" title="GHI: ${Math.round(ghi)} Wh/m²"><div class="beacon-core"></div></div>`,
+        html: `<div class="station-beacon" style="--beacon-color: ${color};" title="GHI: ${(ghi / 1000).toFixed(2)} kWh/m²"><div class="beacon-core"></div></div>`,
         iconSize: [22, 22],
         iconAnchor: [11, 11],
         popupAnchor: [0, -12]
@@ -374,8 +392,8 @@ function createGhiBeaconIcon(ghi, minGhi, maxGhi) {
 
 function updateStationMarkersMode(mode) {
     const isHeatmap = (mode === 'heatmap');
-    const ghiMin = gradientLayer ? gradientLayer._ghiMin : 4000;
-    const ghiMax = gradientLayer ? gradientLayer._ghiMax : 7500;
+    const ghiMean = gradientLayer ? gradientLayer._ghiMean : 5700;
+    const ghiHalfRange = gradientLayer ? gradientLayer._ghiHalfRange : 1500;
 
     Object.keys(markers).forEach(name => {
         const marker = markers[name];
@@ -383,7 +401,7 @@ function updateStationMarkersMode(mode) {
         if (!marker || !st) return;
 
         if (isHeatmap) {
-            marker.setIcon(createGhiBeaconIcon(st.avg_ghi, ghiMin, ghiMax));
+            marker.setIcon(createGhiBeaconIcon(st.avg_ghi, ghiMean, ghiHalfRange));
         } else {
             marker.setIcon(defaultPinIcon);
         }
@@ -402,6 +420,13 @@ const SolarGradientLayer = L.Layer.extend({
         const ghis = this.stations.map(s => s.avg_ghi).filter(v => v > 0);
         this._ghiMin = ghis.length ? Math.min(...ghis) : 4000;
         this._ghiMax = ghis.length ? Math.max(...ghis) : 7500;
+        // Mean-centred scale: yellow = mean GHI; symmetric halfRange keeps both tails balanced
+        this._ghiMean = ghis.length ? ghis.reduce((a, b) => a + b, 0) / ghis.length : 5700;
+        this._ghiHalfRange = Math.max(
+            this._ghiMean - this._ghiMin,
+            this._ghiMax - this._ghiMean,
+            1
+        );
     },
 
     onAdd: function(map) {
@@ -456,8 +481,8 @@ const SolarGradientLayer = L.Layer.extend({
         const stGhis = this.stations.map(s => s.avg_ghi);
         const nStations = this.stations.length;
 
-        const ghiMin = this._ghiMin;
-        const ghiRange = this._ghiMax - ghiMin || 1;
+        const ghiMean = this._ghiMean;
+        const ghiHalfRange = this._ghiHalfRange;
         const P = 2.5; // IDW power parameter
 
         // Normalize SAUDI_BOUNDARY rings (handles single ring or MultiPolygon array of rings)
@@ -493,8 +518,9 @@ const SolarGradientLayer = L.Layer.extend({
                     denominator += w;
                 }
 
-                const ghi = exact >= 0 ? stGhis[exact] : (denominator > 0 ? numerator / denominator : ghiMin);
-                const t = Math.max(0, Math.min(1, (ghi - ghiMin) / ghiRange));
+                const ghi = exact >= 0 ? stGhis[exact] : (denominator > 0 ? numerator / denominator : ghiMean);
+                // Mean-centred: t=0.5 → mean GHI; below mean → blue/green; above mean → orange/red
+                const t = Math.max(0, Math.min(1, 0.5 + (ghi - ghiMean) / (2 * ghiHalfRange)));
                 const [r, g, b] = getGhiColorRGB(t);
 
                 const idx = (sy * sw + sx) * 4;
@@ -554,19 +580,20 @@ const SolarGradientLayer = L.Layer.extend({
 // Color Legend Control for the Gradient View
 const SolarLegendControl = L.Control.extend({
     options: { position: 'bottomleft' },
-    initialize: function(ghiMin, ghiMax) {
+    initialize: function(ghiMin, ghiMean, ghiMax) {
         this._ghiMin = ghiMin;
+        this._ghiMean = ghiMean;
         this._ghiMax = ghiMax;
     },
     onAdd: function() {
         const div = L.DomUtil.create('div', 'solar-legend');
         div.innerHTML = `
-            <div class="solar-legend-title">Avg GHI (Wh/m²)</div>
+            <div class="solar-legend-title">Avg GHI (kWh/m²)</div>
             <div class="solar-legend-bar"></div>
             <div class="solar-legend-labels">
-                <span>${Math.round(this._ghiMin)}</span>
-                <span>${Math.round((this._ghiMin + this._ghiMax) / 2)}</span>
-                <span>${Math.round(this._ghiMax)}</span>
+                <span>${(this._ghiMin / 1000).toFixed(2)}</span>
+                <span>${(this._ghiMean / 1000).toFixed(2)} &#x2205;</span>
+                <span>${(this._ghiMax / 1000).toFixed(2)}</span>
             </div>
         `;
         return div;
@@ -600,7 +627,7 @@ function loadMapAndStationData() {
 
                 // Add marker
                 const marker = L.marker([st.latitude, st.longitude]).addTo(map);
-                marker.bindPopup(`<strong>${st.station_name}</strong><br>Avg GHI: ${st.avg_ghi.toFixed(2)} Wh/m²`);
+                marker.bindPopup(`<strong>${st.station_name}</strong><br>Avg GHI: ${(st.avg_ghi / 1000).toFixed(2)} kWh/m²`);
                 marker.on('click', () => {
                     stationSelect.value = st.station_name;
                     onStationSelectChange(st.station_name, true);
@@ -699,7 +726,7 @@ function setMapMode(mode) {
         updateStationMarkersMode('heatmap');
         // Show color legend
         if (!legendControl && gradientLayer) {
-            legendControl = new SolarLegendControl(gradientLayer._ghiMin, gradientLayer._ghiMax);
+            legendControl = new SolarLegendControl(gradientLayer._ghiMin, gradientLayer._ghiMean, gradientLayer._ghiMax);
             legendControl.addTo(map);
         }
         if (toggleBtn) toggleBtn.textContent = 'Switch to Normal Map';
@@ -1099,10 +1126,10 @@ function renderComparisonPlot() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${st}</strong></td>
-            <td>${mean !== null ? mean.toFixed(2) : '--'}</td>
-            <td>${min !== null ? min.toFixed(2) : '--'}</td>
-            <td>${max !== null ? max.toFixed(2) : '--'}</td>
-            <td>${std !== null ? std.toFixed(2) : '--'}</td>
+            <td>${mean !== null ? (mean / 1000).toFixed(2) : '--'}</td>
+            <td>${min !== null ? (min / 1000).toFixed(2) : '--'}</td>
+            <td>${max !== null ? (max / 1000).toFixed(2) : '--'}</td>
+            <td>${std !== null ? (std / 1000).toFixed(2) : '--'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1160,7 +1187,7 @@ function computePrediction() {
     .then(res => res.json())
     .then(data => {
         if (data.prediction !== undefined) {
-            predValText.textContent = data.prediction.toFixed(2);
+            predValText.textContent = (data.prediction / 1000).toFixed(2);
         } else if (data.error) {
             console.warn("Prediction error:", data.error);
             predValText.textContent = 'Error';
@@ -1168,7 +1195,7 @@ function computePrediction() {
     })
     .catch(err => {
         console.error("Prediction request failed:", err);
-        predValText.textContent = '5946.36';
+        predValText.textContent = '5.95';
     });
 }
 
