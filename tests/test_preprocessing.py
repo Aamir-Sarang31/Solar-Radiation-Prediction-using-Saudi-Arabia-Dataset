@@ -22,7 +22,7 @@ def sample_dataset():
     if os.path.exists("dataset.csv"):
         return load_dataset("dataset.csv")
     else:
-        # Fallback dummy dataframe with all 21 features
+        # Fallback dummy dataframe with all 13 clean features
         data = {feat: np.random.randn(50) for feat in FEATURE_NAMES}
         data["Station_Name"] = ["Station_A"] * 25 + ["Station_B"] * 25
         data[TARGET_NAME] = np.random.uniform(3000, 8000, 50)
@@ -33,13 +33,26 @@ DEG = chr(176)
 
 
 def test_feature_list_completeness():
-    """Verify exactly 21 numerical meteorological features are defined."""
-    assert len(FEATURE_NAMES) == 21
+    """Verify exactly 13 clean meteorological features are defined (radiometric proxies excluded).
+
+    Radiometric inputs (DHI, DNI, GHI Uncertainty, Standard Deviation GHI and their
+    respective uncertainty/std-dev columns) are excluded from FEATURE_NAMES to prevent
+    target leakage — GHI ≈ DNI·cos(θz) + DHI means any linear model trivially reaches
+    R² ≥ 0.97 when those columns are present. See src/dataset.py docstring for the
+    full rationale.
+    """
+    assert len(FEATURE_NAMES) == 13, (
+        f"Expected 13 clean features, got {len(FEATURE_NAMES)}. "
+        "If radiometric columns were re-added, remove them — they leak the target."
+    )
     assert f"Air Temperature (C{DEG})" in FEATURE_NAMES
-    assert "DHI (Wh/m2)" in FEATURE_NAMES
-    assert "DNI (Wh/m2)" in FEATURE_NAMES
     assert "Relative Humidity (%)" in FEATURE_NAMES
     assert "Barometric Pressure (mB (hPa equiv))" in FEATURE_NAMES
+    # Confirm the leakage columns are absent
+    assert "DHI (Wh/m2)" not in FEATURE_NAMES, "DHI is a target-leakage column and must not be in FEATURE_NAMES"
+    assert "DNI (Wh/m2)" not in FEATURE_NAMES, "DNI is a target-leakage column and must not be in FEATURE_NAMES"
+    assert "GHI Uncertainty (Wh/m2)" not in FEATURE_NAMES, "GHI Uncertainty leaks the target and must not be in FEATURE_NAMES"
+    assert "Standard Deviation GHI (Wh/m2)" not in FEATURE_NAMES, "Std-dev GHI leaks the target and must not be in FEATURE_NAMES"
 
 
 def test_dataset_loading_and_cleaning(sample_dataset):
@@ -88,8 +101,8 @@ def test_prepare_fold_data_scaling(sample_dataset):
         df, train_idx, test_idx, scaler_type="standard"
     )
 
-    assert X_train.shape[1] == 21
-    assert X_test.shape[1] == 21
+    assert X_train.shape[1] == len(FEATURE_NAMES)
+    assert X_test.shape[1] == len(FEATURE_NAMES)
     assert len(X_train) == len(train_idx)
     assert len(X_test) == len(test_idx)
 

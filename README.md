@@ -55,6 +55,8 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 - 🌐 **Interactive Flask Web Application** with real-time predictions and station maps
 - ⚙️ **CI/CD Pipelines** with GitHub Actions
 
+> **Feature Selection:** All models are trained on **13 time-varying meteorological features** - temperature, wind (speed/direction/peak), humidity, and barometric pressure plus their instrument uncertainties. Radiometric proxies of GHI (DNI, DHI, and their uncertainties/standard deviations, plus GHI Uncertainty and Standard Deviation GHI) are **deliberately excluded** to prevent target leakage. See the [Feature Selection Rationale](#-feature-selection-rationale) section below.
+
 ---
 
 ## 🏆 Key Features
@@ -78,19 +80,21 @@ We systematically evaluate and benchmark **11 machine learning and deep learning
 
 All 11 models evaluated under the **exact same 10-fold CV partitions, same random seed (42), and uniform feature/target scaling** on `dataset.csv` (1,649 records across 43 stations). Sorted strictly by ascending RMSE (primary gate metric):
 
-| Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs FT-Trans) | Inference (ms) |
+| Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs HGB) | Inference (ms) |
 | :---: | :--- | :--- | :--- | :---: | :--- | :---: | :--- | :---: | :---: | :---: |
-| 🥇 | **FT-Transformer** | **Deep Learning** | **81.10 ± 7.21** | **[75.94, 86.26]** | **110.47 ± 12.04** | **[101.86, 119.08]** | **0.9919 ± 0.0023** | **[0.9902, 0.9935]** | **Baseline Champion** | **0.68** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 129.13 ± 9.53 | [122.31, 135.95] | 172.50 ± 14.25 | [162.31, 182.70] | 0.9807 ± 0.0037 | [0.9781, 0.9833] | $2.00 \times 10^{-7}\ $ | 0.18 |
-| 🥉 | Histogram Gradient Boosting (HGB) | Ensemble | 129.37 ± 12.36 | [120.53, 138.21] | 178.39 ± 22.46 | [162.32, 194.46] | 0.9792 ± 0.0055 | [0.9753, 0.9831] | $3.64 \times 10^{-6}\ $ | 0.79 |
-| 4 | Support Vector Regression (SVR) | Classical ML | 114.11 ± 9.95 | [106.99, 121.23] | 188.36 ± 35.15 | [163.22, 213.51] | 0.9765 ± 0.0080 | [0.9708, 0.9822] | $1.23 \times 10^{-4}\ $ | 0.19 |
-| 5 | Linear Regression (LR) | Classical ML | 134.28 ± 9.64 | [127.38, 141.18] | 194.14 ± 42.34 | [163.86, 224.43] | 0.9746 ± 0.0122 | [0.9659, 0.9833] | $1.59 \times 10^{-4}\ $ | 0.07 |
-| 6 | XGBoost | Ensemble | 155.65 ± 11.10 | [147.71, 163.59] | 215.21 ± 20.70 | [200.40, 230.02] | 0.9697 ± 0.0067 | [0.9649, 0.9745] | $1.06 \times 10^{-7}\ $ | 0.33 |
-| 7 | Random Forest (RF) | Ensemble | 163.60 ± 17.87 | [150.82, 176.38] | 230.28 ± 26.87 | [211.06, 249.51] | 0.9653 ± 0.0090 | [0.9589, 0.9717] | $1.49 \times 10^{-7}\ $ | 30.86 |
-| 8 | 1D CNN | **Deep Learning** | 214.28 ± 19.76 | [200.14, 228.42] | 283.96 ± 25.74 | [265.55, 302.37] | 0.9471 ± 0.0133 | [0.9376, 0.9566] | $3.03 \times 10^{-10}\ $ | 1.32 |
-| 9 | Solar LSTM | **Deep Learning** | 273.68 ± 40.51 | [244.70, 302.66] | 362.18 ± 55.91 | [322.18, 402.18] | 0.9117 ± 0.0335 | [0.8877, 0.9357] | $4.41 \times 10^{-9}\ $ | 0.52 |
-| 10 | Decision Tree (DT) | Classical ML | 280.33 ± 23.14 | [263.78, 296.88] | 410.28 ± 51.76 | [373.25, 447.31] | 0.8895 ± 0.0312 | [0.8672, 0.9118] | $4.33 \times 10^{-8}\ $ | 0.08 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 337.79 ± 22.74 | [321.52, 354.06] | 447.20 ± 27.45 | [427.56, 466.84] | 0.8699 ± 0.0236 | [0.8530, 0.8868] | $4.07 \times 10^{-11}\ $ | 2.94 |
+| 🥇 | **Histogram Gradient Boosting (HGB)** | **Ensemble** | **437.41 ± 28.67** | **[415.79, 459.04]** | **560.92 ± 32.83** | **[536.16, 585.68]** | **0.7972 ± 0.0236** | **[0.7794, 0.8150]** | **Baseline Champion** | **0.02** |
+| 🥈 | Random Forest (RF) | Ensemble | 447.52 ± 37.37 | [419.35, 475.70] | 577.26 ± 42.90 | [544.91, 609.61] | 0.7850 ± 0.0304 | [0.7621, 0.8079] | $2.64 	imes 10^{-2}$ (*) | 0.07 |
+| 🥉 | XGBoost | Ensemble | 454.46 ± 33.12 | [429.48, 479.43] | 584.58 ± 42.03 | [552.89, 616.27] | 0.7792 ± 0.0324 | [0.7548, 0.8037] | $6.52 	imes 10^{-4}$ (***) | 0.01 |
+| 4 | 1D CNN | **Deep Learning** | 488.80 ± 34.33 | [462.92, 514.69] | 634.95 ± 42.12 | [603.19, 666.71] | 0.7390 ± 0.0404 | [0.7086, 0.7695] | $1.21 	imes 10^{-4}$ (***) | 0.13 |
+| 5 | Solar LSTM | **Deep Learning** | 541.02 ± 39.54 | [511.20, 570.83] | 673.01 ± 44.14 | [639.73, 706.29] | 0.7085 ± 0.0317 | [0.6846, 0.7324] | $4.15 	imes 10^{-6}$ (***) | 0.08 |
+| 6 | K-Nearest Neighbors (KNN) | Classical ML | 515.82 ± 36.05 | [488.64, 543.00] | 674.24 ± 46.99 | [638.80, 709.67] | 0.7048 ± 0.0539 | [0.6641, 0.7454] | $7.32 	imes 10^{-5}$ (***) | 0.02 |
+| 7 | FT-Transformer | **Deep Learning** | 521.31 ± 34.44 | [495.34, 547.28] | 674.70 ± 48.01 | [638.50, 710.91] | 0.7055 ± 0.0457 | [0.6711, 0.7400] | $9.56 	imes 10^{-5}$ (***) | 0.09 |
+| 8 | Artificial Neural Network (ANN) | Neural Baseline | 551.15 ± 40.57 | [520.56, 581.74] | 682.98 ± 46.47 | [647.94, 718.02] | 0.6994 ± 0.0375 | [0.6711, 0.7276] | $2.66 	imes 10^{-6}$ (***) | 0.002 |
+| 9 | Support Vector Regression (SVR) | Classical ML | 532.49 ± 36.16 | [505.22, 559.76] | 701.32 ± 44.78 | [667.55, 735.09] | 0.6810 ± 0.0523 | [0.6415, 0.7204] | $2.39 	imes 10^{-5}$ (***) | 0.07 |
+| 10 | Linear Regression (LR) | Classical ML | 588.12 ± 51.03 | [549.64, 626.60] | 722.48 ± 51.38 | [683.74, 761.22] | 0.6632 ± 0.0457 | [0.6288, 0.6977] | $1.18 	imes 10^{-6}$ (***) | 0.001 |
+| 11 | Decision Tree (DT) | Classical ML | 591.22 ± 39.67 | [561.30, 621.13] | 800.93 ± 51.05 | [762.44, 839.42] | 0.5852 ± 0.0599 | [0.5401, 0.6304] | $1.62 	imes 10^{-9}$ (***) | 0.002 |
+
+> **Leakage Removal Notice:** In this benchmark, all radiometric proxy inputs (`DHI`, `DNI`, `GHI Uncertainty`, `Standard Deviation GHI`, and their uncertainties/std-devs) were **completely removed**. Previously, including algebraic components of GHI (`GHI ≈ DNI·cos θz + DHI`) caused artificial near-perfect performance (R² = 0.99 for deep nets, R² = 0.975 for Linear Regression). With pure meteorological inputs (13 features: air temperature, wind dynamics, humidity, barometric pressure), performance reflects true predictive capacity (R² ~ 0.66 - 0.80), where nonlinear ensemble models (HGB, RF, XGB) and 1D CNN excel at capturing complex meteorological relationships.
 
 > **Statistical Significance & Confidence Analysis:** Paired two-tailed Student's t-tests ($df = 9$) across all 10 cross-validation folds confirm that the performance superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$ with exact $p$-values ranging from $3.64 \times 10^{-6}$ (vs HGB) down to $4.07 \times 10^{-11}$ (vs KNN). In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[101.86, 119.08]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[162.31, 182.70]$), demonstrating decisive outperformance. Full t-statistics, exact p-values, and CIs are exported in [`results/statistical_significance.csv`](results/statistical_significance.csv).
 
@@ -98,21 +102,21 @@ All 11 models evaluated under the **exact same 10-fold CV partitions, same rando
 
 To rigorously evaluate real-world generalization to completely **unseen geographical regions and distinct microclimates**, every model is evaluated under strict 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation. In each fold, all observations from one complete weather station are held out for testing while training on the remaining 42 stations:
 
-| Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs FT-Trans) | Inference (ms) |
+| Rank | Model Architecture | Category | MAE (Wh/m²) | 95% CI (MAE) | RMSE (Wh/m²) | 95% CI (RMSE) | R² Score | 95% CI (R²) | $p$-value (vs RF) | Inference (ms) |
 | :---: | :--- | :--- | :--- | :---: | :--- | :---: | :--- | :---: | :---: | :---: |
-| 🥇 | **FT-Transformer** | **Deep Learning** | **90.66 ± 33.82** | **[80.26, 101.07]** | **120.65 ± 54.64** | **[103.83, 137.47]** | **0.9803 ± 0.0352** | **[0.9694, 0.9911]** | **Baseline Champion** | **0.13** |
-| 🥈 | Artificial Neural Network (ANN) | Neural Baseline | 140.69 ± 43.11 | [127.26, 154.11] | 181.66 ± 56.55 | [164.05, 199.27] | 0.9690 ± 0.0253 | [0.9611, 0.9769] | $2.91 \times 10^{-9}\ $ | 0.01 |
-| 🥉 | Linear Regression (LR) | Classical ML | 140.85 ± 40.26 | [128.46, 153.24] | 189.93 ± 79.23 | [165.55, 214.32] | 0.9592 ± 0.0661 | [0.9388, 0.9795] | $1.70 \times 10^{-8}\ $ | 0.005 |
-| 4 | Histogram Gradient Boosting (HGB) | Ensemble | 143.23 ± 47.80 | [128.52, 157.94] | 190.59 ± 71.02 | [168.73, 212.44] | 0.9626 ± 0.0413 | [0.9499, 0.9753] | $1.76 \times 10^{-8}\ $ | 0.04 |
-| 5 | Support Vector Regression (SVR) | Classical ML | 136.55 ± 73.49 | [113.93, 159.17] | 200.18 ± 111.25 | [165.94, 234.41] | 0.9575 ± 0.0489 | [0.9425, 0.9726] | $2.09 \times 10^{-5}\ $ | 0.04 |
-| 6 | XGBoost | Ensemble | 178.43 ± 70.57 | [156.71, 200.15] | 238.79 ± 113.20 | [203.95, 273.63] | 0.9403 ± 0.0692 | [0.9190, 0.9616] | $1.28 \times 10^{-8}\ $ | 0.04 |
-| 7 | Random Forest (RF) | Ensemble | 188.66 ± 74.86 | [165.62, 211.70] | 251.29 ± 106.76 | [218.43, 284.14] | 0.9324 ± 0.0720 | [0.9102, 0.9545] | $9.46 \times 10^{-11}\ $ | 1.16 |
-| 8 | 1D CNN | **Deep Learning** | 241.11 ± 74.89 | [218.06, 264.16] | 312.02 ± 92.24 | [283.64, 340.41] | 0.9030 ± 0.0902 | [0.8753, 0.9308] | $1.16 \times 10^{-18}\ $ | 0.21 |
-| 9 | Solar LSTM | **Deep Learning** | 335.52 ± 90.88 | [307.55, 363.49] | 417.49 ± 112.91 | [382.74, 452.24] | 0.8496 ± 0.1056 | [0.8171, 0.8820] | $9.41 \times 10^{-21}\ $ | 0.13 |
-| 10 | Decision Tree (DT) | Classical ML | 306.23 ± 125.86 | [267.50, 344.96] | 422.54 ± 178.48 | [367.61, 477.47] | 0.8169 ± 0.1826 | [0.7607, 0.8730] | $5.71 \times 10^{-14}\ $ | 0.01 |
-| 11 | K-Nearest Neighbors (KNN) | Classical ML | 371.13 ± 107.23 | [338.13, 404.14] | 469.74 ± 134.50 | [428.35, 511.13] | 0.7890 ± 0.1911 | [0.7302, 0.8478] | $1.02 \times 10^{-21}\ $ | 0.07 |
+| 🥇 | **Random Forest (RF)** | **Ensemble** | **550.81 ± 173.68** | **[497.35, 604.26]** | **674.33 ± 205.91** | **[610.95, 737.70]** | **0.6027 ± 0.2799** | **[0.5166, 0.6889]** | **Baseline Champion** | **0.30** |
+| 🥈 | Histogram Gradient Boosting (HGB) | Ensemble | 553.92 ± 182.42 | [497.77, 610.06] | 675.68 ± 221.50 | [607.50, 743.86] | 0.5745 ± 0.3892 | [0.4547, 0.6943] | n.s. | 0.04 |
+| 🥉 | Artificial Neural Network (ANN) | Neural Baseline | 594.34 ± 209.10 | [529.98, 658.70] | 703.86 ± 235.12 | [631.50, 776.23] | 0.5755 ± 0.2804 | [0.4892, 0.6618] | n.s. | 0.01 |
+| 4 | FT-Transformer | **Deep Learning** | 581.27 ± 214.83 | [515.15, 647.40] | 709.73 ± 254.32 | [631.45, 788.01] | 0.5369 ± 0.3817 | [0.4194, 0.6544] | n.s. | 0.16 |
+| 5 | XGBoost | Ensemble | 584.48 ± 160.22 | [535.16, 633.79] | 714.85 ± 188.72 | [656.76, 772.93] | 0.5491 ± 0.2983 | [0.4573, 0.6409] | $4.86 	imes 10^{-3}$ (**) | 0.05 |
+| 6 | 1D CNN | **Deep Learning** | 592.18 ± 191.96 | [533.09, 651.27] | 726.21 ± 234.65 | [654.00, 798.42] | 0.5181 ± 0.3568 | [0.4083, 0.6279] | $2.31 	imes 10^{-2}$ (*) | 0.21 |
+| 7 | Solar LSTM | **Deep Learning** | 612.48 ± 183.46 | [556.01, 668.95] | 731.72 ± 219.04 | [664.30, 799.14] | 0.5268 ± 0.3527 | [0.4183, 0.6354] | $1.86 	imes 10^{-2}$ (*) | 0.10 |
+| 8 | Linear Regression (LR) | Classical ML | 622.59 ± 207.91 | [558.60, 686.58] | 733.99 ± 228.20 | [663.76, 804.22] | 0.5329 ± 0.3173 | [0.4353, 0.6306] | $1.64 	imes 10^{-2}$ (*) | 0.005 |
+| 9 | K-Nearest Neighbors (KNN) | Classical ML | 658.87 ± 212.27 | [593.54, 724.20] | 804.79 ± 242.15 | [730.26, 879.33] | 0.4137 ± 0.4428 | [0.2774, 0.5500] | $1.15 	imes 10^{-4}$ (***) | 0.03 |
+| 10 | Support Vector Regression (SVR) | Classical ML | 728.79 ± 249.53 | [652.00, 805.59] | 909.53 ± 306.42 | [815.22, 1003.84] | 0.1650 ± 1.0596 | [-0.1611, 0.4912] | $7.13 	imes 10^{-6}$ (***) | 0.10 |
+| 11 | Decision Tree (DT) | Classical ML | 727.63 ± 178.57 | [672.67, 782.59] | 914.08 ± 221.91 | [845.78, 982.38] | 0.2582 ± 0.5372 | [0.0929, 0.4236] | $1.05 	imes 10^{-8}$ (***) | 0.006 |
 
-> **Statistical Significance & Spatial Generalization Analysis:** Paired two-tailed Student's t-tests ($df = 42$) across all 43 held-out stations confirm that the spatial generalization superiority of **FT-Transformer** over every competing baseline is statistically significant at $p < 0.001\ (***)$ (e.g. vs ANN: $t = 7.49, p = 2.91 \times 10^{-9}$; vs LR: $t = 6.95, p = 1.70 \times 10^{-8}$; vs HGB: $t = 6.94, p = 1.76 \times 10^{-8}$; vs SVR: $t = 4.79, p = 2.09 \times 10^{-5}$). In addition, the 95% Confidence Interval for FT-Transformer's RMSE ($[103.83, 137.47]\text{ Wh/m}^2$) exhibits **zero overlap** with any baseline (nearest being ANN at $[164.05, 199.27]$), demonstrating decisive spatial outperformance with a **61.01 Wh/m²** (33.6%) error reduction. Full per-station data and t-test statistics are exported in [`results/loso_statistical_significance.csv`](results/loso_statistical_significance.csv).
+> **Spatial Generalization Analysis (Leakage-Free):** Evaluated strictly across all 43 held-out stations under Leave-One-Station-Out cross-validation. In the absence of radiometric leakage, Random Forest and Histogram Gradient Boosting achieve the strongest spatial generalization (RMSE ~674–676 Wh/m², R² ~0.57–0.60), closely followed by ANN and FT-Transformer (RMSE ~703–709 Wh/m²). Full per-station data and t-test statistics are exported in [`results/loso_statistical_significance.csv`](results/loso_statistical_significance.csv).
 
 ---
 
@@ -121,9 +125,9 @@ To rigorously evaluate real-world generalization to completely **unseen geograph
 ### 1. FT-Transformer (Feature Tokenizer Transformer) — Champion Model
 
 ```
-Input: (B, 21 features)
-  ├── Numerical Feature Tokenizer: 21 × Linear(1, 64) projections → (B, 21, 64)
-  ├── Prepend Learnable [CLS] Token → (B, 22, 64)
+Input: (B, 13 features)
+  ├── Numerical Feature Tokenizer: 13 × Linear(1, 64) projections → (B, 13, 64)
+  ├── Prepend Learnable [CLS] Token → (B, 14, 64)
   ├── 2× Pre-LN TransformerEncoderLayer (d_model=64, 4 Heads, DimFF=48, Dropout=0.10)
   └── Extract [CLS] Token → LayerNorm → Linear(64, 1) → Output GHI (B, 1)
 ```
@@ -133,7 +137,7 @@ Input: (B, 21 features)
 ### 2. Solar 1D CNN
 
 ```
-Input: (B, 1, 21)
+Input: (B, 1, 13)
   ├── Stem Conv1d(1, 64) + BatchNorm1d + GELU
   ├── Residual ConvBlock1D(64, 128) + Residual ConvBlock1D(128, 256)
   └── AdaptiveAvgPool1d(1) → Flatten → MLP Head → Output GHI (B, 1)
@@ -142,7 +146,7 @@ Input: (B, 1, 21)
 ### 3. Solar LSTM
 
 ```
-Input: (B, 21, 1)
+Input: (B, 13, 1)
   ├── Linear Feature Projection (1 → 32) + LayerNorm
   ├── 1-Layer Bidirectional LSTM(32, 64, Dropout=0.30)
   └── Global Average Pooling → LayerNorm → MLP Head → Output GHI (B, 1)
@@ -482,7 +486,7 @@ The repository includes a production-ready, interactive web dashboard and REST A
    - **Automated GHI Summary Statistics Table**: Dynamically calculates Mean, Minimum, Maximum, and Standard Deviation GHI for selected stations with themed table styling.
 
 5. **⚡ Real-Time GHI Prediction Engine**
-   - Accepts 21 meteorological features (temperatures, wind dynamics, diffuse/direct irradiance components, humidity, barometric pressure, and measurement uncertainties).
+   - Accepts 13 meteorological features (air temperature, wind speed/direction/peak, relative humidity, barometric pressure, and instrument uncertainties). Radiometric components (DNI, DHI, GHI uncertainty/std-dev) are excluded as they constitute target leakage.
    - **Real-Time Input Validation**: Displays valid operating ranges derived from national empirical observations with high-contrast text.
    - **"Load Default Values" Button**: Electric magenta action button for one-click autofill with national dataset means.
    - **Glowing Prediction Result Box**: Displays predicted GHI with neon green glassmorphic banner and illuminated metrics.
@@ -586,14 +590,6 @@ curl -X POST http://localhost:5000/predict \
     "Wind Speed at 3m (m/s)": 2.60,
     "Wind Speed at 3m Uncertainty (m/s)": 0.06,
     "Wind Speed at 3m (std dev) (m/s)": 1.53,
-    "DHI (Wh/m2)": 2166.14,
-    "DHI Uncertainty (Wh/m2)": 387.05,
-    "Standard Deviation DHI (Wh/m2)": 593.40,
-    "DNI (Wh/m2)": 5587.29,
-    "DNI Uncertainty (Wh/m2)": 965.23,
-    "Standard Deviation DNI (Wh/m2)": 1747.42,
-    "GHI Uncertainty (Wh/m2)": 828.38,
-    "Standard Deviation GHI (Wh/m2)": 657.29,
     "Peak Wind Speed at 3m (m/s)": 14.17,
     "Peak Wind Speed at 3m Uncertainty (m/s)": 0.08,
     "Relative Humidity (%)": 39.08,
@@ -615,6 +611,57 @@ curl -X POST http://localhost:5000/predict \
 
 ---
 
+
+---
+
+## Feature Selection Rationale
+
+### Radiometric Inputs Excluded (Target Leakage)
+
+The raw KFUPM dataset contains radiometric columns that are algebraically derived from or co-measured with the prediction target (GHI). **Including any of these constitutes target leakage**: even a simple Linear Regression trivially reaches R2 >= 0.97 because it effectively inverts the GHI measurement.
+
+| Excluded Column | Reason |
+|---|---|
+| `DHI (Wh/m2)` | GHI = DNI*cos(theta_z) + **DHI**. DHI is a primary algebraic component of GHI. |
+| `DHI Uncertainty (Wh/m2)` | Instrument uncertainty proportional to DHI; encodes DHI magnitude. |
+| `Standard Deviation DHI (Wh/m2)` | Temporal spread of DHI; directly coupled to DHI and hence GHI. |
+| `DNI (Wh/m2)` | GHI = **DNI***cos(theta_z) + DHI. DNI is the other primary algebraic component. |
+| `DNI Uncertainty (Wh/m2)` | Same reasoning as DHI Uncertainty. |
+| `Standard Deviation DNI (Wh/m2)` | Same reasoning as Standard Deviation DHI. |
+| `GHI Uncertainty (Wh/m2)` | Uncertainty *of the target variable itself*; encodes GHI magnitude directly. |
+| `Standard Deviation GHI (Wh/m2)` | Temporal spread of GHI within the aggregation window; trivially correlated with GHI. |
+
+### Candidate Literature Features: Exclusion Rationale
+
+In the broader solar-resource literature, several variables are frequently cited as candidate predictors: **Latitude, Longitude, Elevation, Sunshine Duration, Rainfall, and Max/Min Temperature & Humidity**. None of these are used as input features in our model suite. Below is the detailed physical, methodological, and sensor-network rationale for why each was excluded:
+
+| Candidate Variable | Status in dataset.csv | Decision | Physical & Methodological Rationale |
+|---|---|---|---|
+| **Latitude & Longitude** | Present as station metadata | **Deliberately Excluded** | Static spatial coordinates act as fixed station identifiers. In tabular machine learning, including coordinates causes decision trees and neural networks to memorize specific station identities (spatial lookup) rather than learning transferable atmospheric physics. Crucially, in 43-Fold Leave-One-Station-Out (LOSO) cross-validation, models evaluated on unseen stations cannot rely on spatial memorization. Excluding coordinates forces models to generalize purely based on universal atmospheric dynamics. Coordinates are reserved strictly for mapping, spatial clustering, and fold grouping. |
+| **Elevation** | Absent | **Excluded (Physically Subsumed)** | Topographic elevation is not measured as a separate column. More importantly, **Barometric Pressure is measured at all stations and acts as a dynamic physical surrogate for elevation** via the barometric formula:  = P_0 \exp(-Mgh / RT)$. Unlike static altitude, local barometric pressure dynamically accounts for both elevation and synoptic pressure systems (high/low pressure cells) that govern atmospheric optical path length and air column density. |
+| **Sunshine Duration** | Absent | **Excluded (Instrument Scope & Leakage Risk)** | Automated K.A.CARE / KFUPM stations deploy high-precision thermopile radiometers and ultrasonic meteorological sensors rather than Campbell-Stokes glass spheres or optical sunshine recorders. Furthermore, the WMO defines sunshine duration as periods when Direct Normal Irradiance exceeds \text{ W/m}^2$; sunshine duration is therefore an algebraic proxy of DNI, and including it would reintroduce radiometric target leakage. |
+| **Rainfall / Precipitation** | Absent | **Excluded (Arid Network Scope & Irrelevance)** | The network monitors hyper-arid and arid desert microclimates in the Arabian Peninsula where annual rainfall is extremely low (<50–100 mm/year) and episodic. Solar research stations in hyper-arid zones prioritize radiometric, thermal, and aeolian sensors over rain gauges. On a monthly timescale in desert regimes, rainfall has virtually zero predictive variance for irradiance compared to aerosol optical depth and cloud dynamics. |
+| **Max / Min Temperature** | Absent (Single-instant extremes) | **Subsumed by Mean & Standard Deviation** | The dataset provides monthly aggregated summaries of continuous logger data. Discrete single-instant monthly extremes (Max/Min) are prone to sensor spikes and localized thermal micro-artifacts. Instead, the dataset provides **mean Air Temperature and its monthly Standard Deviation**. Standard deviation captures the complete **diurnal temperature range (DTR)** across all days of the month with high statistical robustness. DTR directly reflects atmospheric clearness and transmissivity (clear desert skies yield wide day-night temperature swings, whereas dust/clouds dampen variance). |
+| **Max / Min Humidity** | Absent (Single-instant extremes) | **Subsumed by Mean & Standard Deviation** | Analogous to temperature: continuous monthly mean Relative Humidity and its monthly Standard Deviation capture atmospheric moisture content and diurnal volatility without vulnerability to single-point condensation spikes. |
+
+### Clean Feature Set (13 Features Used for Training)
+
+| # | Feature | Unit |
+|---|---|---|
+| 1 | Air Temperature | C |
+| 2 | Air Temperature Uncertainty | C |
+| 3 | Wind Direction at 3 m | deg N |
+| 4 | Wind Direction at 3 m Uncertainty | deg N |
+| 5 | Wind Speed at 3 m | m/s |
+| 6 | Wind Speed at 3 m Uncertainty | m/s |
+| 7 | Wind Speed at 3 m (std dev) | m/s |
+| 8 | Peak Wind Speed at 3 m | m/s |
+| 9 | Peak Wind Speed at 3 m Uncertainty | m/s |
+| 10 | Relative Humidity | % |
+| 11 | Relative Humidity Uncertainty | % |
+| 12 | Barometric Pressure | mB (hPa) |
+| 13 | Barometric Pressure Uncertainty | mB (hPa) |
+
 ## 📋 Dataset
 
 | Property | Value |
@@ -624,7 +671,7 @@ curl -X POST http://localhost:5000/predict \
 | **Period** | 2017–2021 |
 | **Records** | 1,649 monthly aggregated observations |
 | **Target Variable** | Global Horizontal Irradiance (GHI) in Wh/m² |
-| **Features (21)** | Temperature (avg/max/min), Humidity (avg/max/min), Pressure, Wind Speed/Direction, DNI, DHI, Sunshine Duration, Rainfall, Latitude, Longitude, Elevation, and temporal features |
+| **Features (13, clean)** | Air Temperature, Wind Speed/Direction/Peak, Relative Humidity, Barometric Pressure (each with instrument uncertainties). Radiometric proxies (DNI, DHI, GHI-derived) and static/absent fields excluded. See Feature Selection Rationale. |
 
 ---
 

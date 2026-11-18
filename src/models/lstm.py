@@ -2,9 +2,11 @@
 SolarLSTM: Long Short-Term Memory Network for Solar Radiation (GHI) Prediction.
 
 Methodology Note:
-Each row of 21 meteorological features is modeled as an ordered feature representation
+Each row of 13 meteorological features is modeled as an ordered feature representation
 (row-level pseudo-sequence) with feature embedding projection, stacked LSTM layers,
 recurrent dropout, LayerNorm, and a multi-layer perceptron regression head.
+Radiometric proxies of GHI (DNI, DHI, their uncertainties/std-devs, GHI Uncertainty
+and Standard Deviation GHI) are excluded from the input to prevent target leakage.
 This architecture supports real-time single-row inference for web deployment.
 """
 
@@ -17,7 +19,9 @@ class SolarLSTM(nn.Module):
     LSTM regression model for Solar Radiation (GHI) Prediction.
     
     Args:
-        input_dim (int): Number of input meteorological features (default: 21).
+        input_dim (int): Number of input meteorological features (default: 13).
+            Radiometric proxies (DNI, DHI, GHI uncertainty/std-dev) are excluded
+            to prevent target leakage. See src/dataset.py for full rationale.
         embed_dim (int): Projection dimension for each feature token (default: 32).
         hidden_dim (int): LSTM hidden state dimension (default: 64).
         num_layers (int): Number of stacked LSTM layers (default: 2).
@@ -27,7 +31,7 @@ class SolarLSTM(nn.Module):
 
     def __init__(
         self,
-        input_dim: int = 21,
+        input_dim: int = 13,
         embed_dim: int = 32,
         hidden_dim: int = 64,
         num_layers: int = 2,
@@ -74,14 +78,14 @@ class SolarLSTM(nn.Module):
         """
         Forward pass.
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, 21).
+            x (torch.Tensor): Input tensor of shape (batch_size, 13).
         Returns:
             torch.Tensor: Predicted GHI of shape (batch_size, 1).
         """
-        # Reshape (B, 21) -> (B, 21, 1)
+        # Reshape (B, 13) -> (B, 13, 1)
         x_seq = x.unsqueeze(-1)
 
-        # Project to (B, 21, embed_dim)
+        # Project to (B, 13, embed_dim)
         embeddings = self.input_norm(self.feature_projection(x_seq))
 
         # LSTM output: (B, 21, hidden_dim * num_directions)

@@ -5,18 +5,20 @@ Unit tests for PyTorch deep learning model architectures (LSTM, 1D CNN, FT-Trans
 import pytest
 import torch
 from src.models import build_model
+from src.dataset import FEATURE_NAMES
+
+NUM_FEATURES = len(FEATURE_NAMES)  # 13 clean meteorological features
 
 
 @pytest.mark.parametrize("model_name", ["lstm", "cnn1d", "transformer"])
 def test_model_forward_pass(model_name):
-    """Verify input shape (batch_size, 21) produces output shape (batch_size, 1)."""
+    """Verify input shape (batch_size, NUM_FEATURES) produces output shape (batch_size, 1)."""
     batch_size = 8
-    num_features = 21
 
     model = build_model(model_name)
     model.eval()
 
-    dummy_input = torch.randn(batch_size, num_features)
+    dummy_input = torch.randn(batch_size, NUM_FEATURES)
     with torch.no_grad():
         output = model(dummy_input)
 
@@ -28,12 +30,11 @@ def test_model_forward_pass(model_name):
 def test_model_backward_pass_gradients(model_name):
     """Verify loss calculation and backpropagation flow through all trainable parameters."""
     batch_size = 4
-    num_features = 21
 
     model = build_model(model_name)
     model.train()
 
-    dummy_input = torch.randn(batch_size, num_features)
+    dummy_input = torch.randn(batch_size, NUM_FEATURES)
     dummy_target = torch.randn(batch_size, 1)
 
     criterion = torch.nn.MSELoss()
@@ -59,7 +60,7 @@ def test_single_sample_inference():
     for model_name in ["lstm", "cnn1d", "transformer"]:
         model = build_model(model_name)
         model.eval()
-        single_input = torch.randn(1, 21)
+        single_input = torch.randn(1, NUM_FEATURES)
         with torch.no_grad():
             pred = model(single_input)
         assert pred.shape == (1, 1)

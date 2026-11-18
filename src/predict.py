@@ -72,12 +72,13 @@ class SolarPredictor:
         Returns:
             float: Predicted Global Horizontal Irradiance (GHI) in Wh/m².
         """
-        # Validate and assemble feature vector
+        # Validate and assemble feature vector (supporting flat or nested 'features' dict)
+        features_dict = input_data.get("features") if isinstance(input_data.get("features"), dict) else input_data
         vector = []
         for feature in FEATURE_NAMES:
-            if feature not in input_data or input_data[feature] is None or pd.isna(input_data[feature]):
+            if feature not in features_dict or features_dict[feature] is None or pd.isna(features_dict[feature]):
                 raise ValueError(f"Missing required feature: '{feature}'")
-            vector.append(float(input_data[feature]))
+            vector.append(float(features_dict[feature]))
 
         feature_array = np.array(vector, dtype=np.float64).reshape(1, -1)
 

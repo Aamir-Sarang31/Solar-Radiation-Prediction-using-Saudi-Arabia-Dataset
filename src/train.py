@@ -5,6 +5,10 @@ Supports 10-Fold CV and 43-Fold Leave-One-Station-Out (LOSO) Cross-Validation.
 
 import os
 import sys
+import tempfile
+
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "mpl_solar"))
 import json
 from typing import Tuple, Optional
 
@@ -160,7 +164,7 @@ ALL_CLASSICAL_MODELS = {
     "lr": lambda seed: LinearRegression(),
     "hgb": lambda seed: HistGradientBoostingRegressor(random_state=seed),
     "xgb": lambda seed: XGBRegressor(random_state=seed, n_estimators=100) if HAS_XGB else GradientBoostingRegressor(random_state=seed),
-    "rf": lambda seed: RandomForestRegressor(n_estimators=100, random_state=seed, n_jobs=-1),
+    "rf": lambda seed: RandomForestRegressor(n_estimators=100, random_state=seed, n_jobs=1),
     "ann": lambda seed: TransformedTargetRegressor(
         regressor=MLPRegressor(hidden_layer_sizes=(16, 8), max_iter=1000, alpha=1.0, batch_size=32, early_stopping=True, random_state=seed),
         transformer=StandardScaler()

@@ -2,9 +2,11 @@
 SolarCNN1D: 1D Convolutional Neural Network for Solar Radiation (GHI) Prediction.
 
 Methodology Note:
-Each row of 21 meteorological features is processed across multi-scale 1D convolutional
+Each row of 13 meteorological features is processed across multi-scale 1D convolutional
 kernels with residual skip connections, batch normalization, GELU activations, and
 adaptive pooling leading to an MLP regression head.
+Radiometric proxies of GHI (DNI, DHI, their uncertainties/std-devs, GHI Uncertainty
+and Standard Deviation GHI) are excluded from the input to prevent target leakage.
 This architecture supports real-time single-row inference for web deployment.
 """
 
@@ -47,14 +49,16 @@ class SolarCNN1D(nn.Module):
     1D CNN regression model for Solar Radiation (GHI) Prediction.
 
     Args:
-        input_dim (int): Number of input meteorological features (default: 21).
+        input_dim (int): Number of input meteorological features (default: 13).
+            Radiometric proxies (DNI, DHI, GHI uncertainty/std-dev) are excluded
+            to prevent target leakage. See src/dataset.py for full rationale.
         base_channels (int): Base channel depth (default: 32).
         dropout (float): Dropout probability (default: 0.2).
     """
 
     def __init__(
         self,
-        input_dim: int = 21,
+        input_dim: int = 13,
         base_channels: int = 32,
         dropout: float = 0.2
     ):
@@ -90,11 +94,11 @@ class SolarCNN1D(nn.Module):
         """
         Forward pass.
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, 21).
+            x (torch.Tensor): Input tensor of shape (batch_size, 13).
         Returns:
             torch.Tensor: Predicted GHI of shape (batch_size, 1).
         """
-        # Reshape (B, 21) -> (B, 1, 21)
+        # Reshape (B, 13) -> (B, 1, 13)
         x_channels = x.unsqueeze(1)
 
         out = self.stem(x_channels)

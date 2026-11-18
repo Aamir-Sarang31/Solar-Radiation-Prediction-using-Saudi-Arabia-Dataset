@@ -5,6 +5,10 @@ Supports 10-Fold CV (or custom folds) across Deep Learning and Classical ML arch
 
 import os
 import sys
+import tempfile
+
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "mpl_solar"))
 import json
 import argparse
 from typing import Dict, Any, Tuple, Optional
@@ -312,7 +316,7 @@ def tune_classical_model(
     elif model_key == "rf":
         base_estimator = Pipeline([
             ("scaler", StandardScaler()),
-            ("regressor", RandomForestRegressor(random_state=seed, n_jobs=-1))
+            ("regressor", RandomForestRegressor(random_state=seed, n_jobs=1))
         ])
         param_distributions = {
             "regressor__n_estimators": [50, 100, 150, 200],

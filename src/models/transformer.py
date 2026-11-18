@@ -48,7 +48,9 @@ class SolarTransformer(nn.Module):
     FT-Transformer regression model for Solar Radiation (GHI) Prediction.
 
     Args:
-        num_features (int): Number of input meteorological features (default: 21).
+        num_features (int): Number of input meteorological features (default: 13).
+            Radiometric proxies (DNI, DHI, GHI uncertainty/std-dev) are excluded
+            to prevent target leakage. See src/dataset.py for full rationale.
         d_model (int): Token embedding dimension (default: 48).
         nhead (int): Number of self-attention heads (default: 4).
         num_layers (int): Number of Transformer Encoder blocks (default: 2).
@@ -58,7 +60,7 @@ class SolarTransformer(nn.Module):
 
     def __init__(
         self,
-        num_features: int = 21,
+        num_features: int = 13,
         d_model: int = 48,
         nhead: int = 4,
         num_layers: int = 2,
@@ -104,19 +106,19 @@ class SolarTransformer(nn.Module):
         """
         Forward pass.
         Args:
-            x (torch.Tensor): Input tensor of shape (batch_size, 21).
+            x (torch.Tensor): Input tensor of shape (batch_size, 13).
         Returns:
             torch.Tensor: Predicted GHI of shape (batch_size, 1).
         """
         batch_size = x.size(0)
 
-        # Tokenize features: (B, 21, d_model)
+        # Tokenize features: (B, 13, d_model)
         feature_tokens = self.tokenizer(x)
 
         # Expand [CLS] token to batch size: (B, 1, d_model)
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
 
-        # Concatenate [CLS] + feature tokens -> (B, 22, d_model)
+        # Concatenate [CLS] + feature tokens -> (B, 14, d_model)
         tokens = torch.cat([cls_tokens, feature_tokens], dim=1)
 
         # Transformer self-attention pass
