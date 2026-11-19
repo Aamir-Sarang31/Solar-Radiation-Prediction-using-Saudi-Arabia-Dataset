@@ -323,7 +323,7 @@ Solar-Radiation-Prediction-using-Saudi-Arabia-Dataset/
 │   ├── homepage_gradient.png      # Invariant Solar Radiation Gradient View
 │   ├── Features_comparison.png    # Monthly resource feature trends & scale normalization
 │   ├── Station_comparison.png     # Multi-station comparison & GHI summary statistics
-│   └── Predictions.png            # Real-time GHI prediction interface (FT-Transformer)
+│   └── Predictions.png            # Real-time GHI prediction interface (Clean 13-feature inference in kWh/m²)
 │
 ├── dataset.csv                    # Saudi Arabia solar radiation dataset (1,649 records)
 ├── requirements.txt               # Production Python dependencies (Flask, PyTorch, sklearn)
@@ -456,7 +456,7 @@ The repository includes a production-ready, interactive web dashboard and REST A
 | Real-Time GHI Prediction Interface |
 | :---: |
 | ![GHI Prediction](Screenshots/Predictions.png) |
-| *Live 21-feature GHI inference with range indicators, dataset defaults, and champion FT-Transformer* |
+| *Live 13-feature GHI prediction interface in Neon Dark mode with valid operating ranges, one-click national defaults, and real-time output in kWh/m²* |
 
 ---
 
@@ -490,7 +490,7 @@ The repository includes a production-ready, interactive web dashboard and REST A
    - **Real-Time Input Validation**: Displays valid operating ranges derived from national empirical observations with high-contrast text.
    - **"Load Default Values" Button**: Electric magenta action button for one-click autofill with national dataset means.
    - **Glowing Prediction Result Box**: Displays predicted GHI with neon green glassmorphic banner and illuminated metrics.
-   - Powered by the production champion **FT-Transformer** model (`R² = 0.9919`, `MAE = 81.10 Wh/m²`), providing sub-millisecond inference.
+   - Provides sub-millisecond inference across deep learning and ensemble models, outputting predicted GHI directly in operational units (kWh/m²).
 
 ---
 
@@ -573,8 +573,8 @@ The Flask backend exposes a clean JSON REST API:
 | `/station-details` | `GET` | Station metadata & monthly aggregated trends | `?station=<name>&year=<year>` |
 | `/data-analysis` | `GET` | Summary statistics (mean, min, max, std) for all features | None |
 | `/station-comparison` | `POST` | Multi-station time series & summary stats | `{"stations": [...], "params": [...], "year": "2020"}` |
-| `/predict` | `POST` | Execute real-time GHI inference | JSON payload with 21 features & optional `model_type` |
-| `/get-average-values` | `GET` | National mean values for all 21 input features | None |
+| `/predict` | `POST` | Execute real-time GHI inference | JSON payload with 13 meteorological features & optional `model_type` |
+| `/get-average-values` | `GET` | National mean values for all 13 input features | None |
 | `/get-ghi-thresholds` | `GET` | GHI 25th and 75th percentile classification bounds | None |
 
 #### Sample Prediction Request (`POST /predict`):
